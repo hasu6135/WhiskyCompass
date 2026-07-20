@@ -35,7 +35,7 @@ echo [STEP 1/3] 🔄 最新情報を取得してAIレビュー執筆中... | pow
 echo --------------------------------------------------- | powershell -Command "$Input | Tee-Object -FilePath '%LOG_FILE%' -Append"
 
 rem 💡 nodeの出力（エラー含む）をリアルタイムに画面に出しつつログへ
-node app.js 2>&1 | powershell -Command "$Input | Tee-Object -FilePath '%LOG_FILE%' -Append"
+powershell -NoProfile -Command "& { node app.js 2>&1 | Tee-Object -FilePath '%LOG_FILE%' -Append; exit $LASTEXITCODE }"
 
 if errorlevel 1 (
     echo.

@@ -8,7 +8,8 @@ order), then asks LocalLM for a short, neutral product introduction.
 
 1. Register a Rakuten Web Service application and obtain an application ID,
    access key, and Rakuten Affiliate ID.
-2. Set the values in `.env.example` as environment variables. Do not place real
+2. Set the values in `.env.example` as environment variables. `RAKUTEN_REFERRER`
+   must be identical to an allowed website registered in Rakuten Web Service. Do not place real
    API credentials in a file served from `public/`.
 3. Start LM Studio's local server at `http://localhost:1234` (optional; the
    publisher creates conservative fallback text if it is offline).

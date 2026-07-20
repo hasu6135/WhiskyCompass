@@ -17,10 +17,12 @@ import path from 'node:path';
 const LM_STUDIO_API_URL = 'http://localhost:1234/v1/chat/completions';
 const OUTPUT_FILE = path.resolve('public/data/whiskies.js');
 const RAKUTEN_ENDPOINT = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
-const RAKUTEN_APP_ID = '8c84178e-0bf6-4f6a-a82d-b462e495a16e';
-const RAKUTEN_ACCESS_KEY = 'pk_mp6RiNMjytMEIawQKJ6UXKwClKqjfxMkLKTCjTIcsSs';
-const RAKUTEN_AFFILIATE_ID = '55ef5b8c.6ce806f3.55ef5b8d.c4304047';
-const AMAZON_TAG = process.env.AMAZON_TAG || 'pikumin6135-22';
+const RAKUTEN_APP_ID = process.env.RAKUTEN_APP_ID;
+const RAKUTEN_ACCESS_KEY = process.env.RAKUTEN_ACCESS_KEY;
+const RAKUTEN_AFFILIATE_ID = process.env.RAKUTEN_AFFILIATE_ID;
+const RAKUTEN_REFERRER = process.env.RAKUTEN_REFERRER || 'https://whisky-compass.pikumin.workers.dev/';
+const RAKUTEN_ORIGIN = new URL(RAKUTEN_REFERRER).origin;
+const AMAZON_TAG = process.env.AMAZON_TAG || 'yourtag-22';
 const AI_MODEL_NAME = process.env.LM_STUDIO_MODEL || undefined;
 
 function required(value, name) {
@@ -68,7 +70,12 @@ async function rakutenSearch(sort) {
     formatVersion: '2',
     elements: 'itemName,itemPrice,itemCaption,itemUrl,affiliateUrl,mediumImageUrls,reviewCount,reviewAverage,shopName,genreId,availability'
   });
-  const response = await fetch(`${RAKUTEN_ENDPOINT}?${params}`);
+  const response = await fetch(`${RAKUTEN_ENDPOINT}?${params}`, {
+    headers: {
+      Referer: RAKUTEN_REFERRER,
+      Origin: RAKUTEN_ORIGIN
+    }
+  });
   if (!response.ok) throw new Error(`Rakuten API ${response.status}: ${await response.text()}`);
   const data = await response.json();
   return Array.isArray(data.items) ? data.items : [];
