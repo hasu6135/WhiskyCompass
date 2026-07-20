@@ -1,11 +1,12 @@
 const LM_STUDIO_API_URL = 'http://localhost:1234/v1/chat/completions';
 
-const whiskies = [
+const fallbackWhiskies = [
   {name:'山崎 シングルモルト', origin:'JAPANESE / 京都', score:'4.4', price:6900, flavor:['フルーティー','華やか','リッチ'], style:['ジャパニーズ'], note:'熟した苺やさくらんぼを思わせる華やかさ。やわらかな甘みと、端正な樽香が続く定番の一本。', label:'YAMAZAKI', amazon:'https://www.amazon.co.jp/s?k=%E5%B1%B1%E5%B4%8E+%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%A2%E3%83%AB%E3%83%88&tag=yourtag-22', rakuten:'https://search.rakuten.co.jp/search/mall/%E5%B1%B1%E5%B4%8E%20%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%A2%E3%83%AB%E3%83%88/'},
   {name:'白州 シングルモルト', origin:'JAPANESE / 山梨', score:'4.3', price:6800, flavor:['フルーティー','スモーキー','華やか'], style:['ジャパニーズ','ハイボール'], note:'森の若葉、青りんご、ほのかな煙。清々しい個性はハイボールでも輪郭を失いません。', label:'HAKUSHU', amazon:'https://www.amazon.co.jp/s?k=%E7%99%BD%E5%B7%9E+%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%A2%E3%83%AB%E3%83%88&tag=yourtag-22', rakuten:'https://search.rakuten.co.jp/search/mall/%E7%99%BD%E5%B7%9E%20%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%A2%E3%83%AB%E3%83%88/'},
   {name:'ラフロイグ 10年', origin:'SCOTCH / Islay', score:'4.2', price:5600, flavor:['スモーキー','リッチ'], style:['スコッチ'], note:'潮風、ヨード、焚き火の煙。力強いピートの奥に、甘い麦芽のニュアンスを感じるアイラモルト。', label:'LAPHROAIG', amazon:'https://www.amazon.co.jp/s?k=%E3%83%A9%E3%83%95%E3%83%AD%E3%82%A4%E3%82%B0+10%E5%B9%B4&tag=yourtag-22', rakuten:'https://search.rakuten.co.jp/search/mall/%E3%83%A9%E3%83%95%E3%83%AD%E3%82%A4%E3%82%B0%2010%E5%B9%B4/'},
   {name:'メーカーズマーク', origin:'BOURBON / Kentucky', score:'4.1', price:2900, flavor:['バニラ','リッチ','フルーティー'], style:['バーボン','ハイボール'], note:'バニラ、はちみつ、やわらかな小麦の甘み。ロックでもハイボールでも親しみやすいバーボンです。', label:'MAKER’S', amazon:'https://www.amazon.co.jp/s?k=%E3%83%A1%E3%83%BC%E3%82%AB%E3%83%BC%E3%82%BA%E3%83%9E%E3%83%BC%E3%82%AF&tag=yourtag-22', rakuten:'https://search.rakuten.co.jp/search/mall/%E3%83%A1%E3%83%BC%E3%82%AB%E3%83%BC%E3%82%BA%E3%83%9E%E3%83%BC%E3%82%AF/'}
 ];
+const whiskies = Array.isArray(window.WHISKY_DATA) && window.WHISKY_DATA.length ? window.WHISKY_DATA : fallbackWhiskies;
 let selectedFilters = [], selectedPrice = null;
 const grid = document.querySelector('#reviewGrid'); const keyword = document.querySelector('#keyword');
 function render() { const q = keyword.value.trim().toLowerCase(); const items = whiskies.filter(w => (!q || (w.name+w.origin+w.flavor.join(' ')+w.style.join(' ')).toLowerCase().includes(q)) && (!selectedPrice || w.price <= selectedPrice) && selectedFilters.every(f => w.flavor.includes(f) || w.style.includes(f)));

@@ -17,10 +17,10 @@ import path from 'node:path';
 const LM_STUDIO_API_URL = 'http://localhost:1234/v1/chat/completions';
 const OUTPUT_FILE = path.resolve('public/data/whiskies.js');
 const RAKUTEN_ENDPOINT = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
-const RAKUTEN_APP_ID = process.env.RAKUTEN_APP_ID;
-const RAKUTEN_ACCESS_KEY = process.env.RAKUTEN_ACCESS_KEY;
-const RAKUTEN_AFFILIATE_ID = process.env.RAKUTEN_AFFILIATE_ID;
-const AMAZON_TAG = process.env.AMAZON_TAG || 'yourtag-22';
+const RAKUTEN_APP_ID = '8c84178e-0bf6-4f6a-a82d-b462e495a16e';
+const RAKUTEN_ACCESS_KEY = 'pk_mp6RiNMjytMEIawQKJ6UXKwClKqjfxMkLKTCjTIcsSs';
+const RAKUTEN_AFFILIATE_ID = '55ef5b8c.6ce806f3.55ef5b8d.c4304047';
+const AMAZON_TAG = process.env.AMAZON_TAG || 'pikumin6135-22';
 const AI_MODEL_NAME = process.env.LM_STUDIO_MODEL || undefined;
 
 function required(value, name) {
@@ -90,6 +90,7 @@ function normaliseRakutenItem(item, source, index) {
     price: Number(item.itemPrice || 0),
     flavor: tagsFor(title, item.itemCaption),
     style: styleFor(title),
+    caption: cleanTitle(item.itemCaption || ''),
     note: '',
     label: title.slice(0, 14).toUpperCase(),
     image,
