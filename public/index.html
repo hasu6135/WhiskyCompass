@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="WhiskyCompassは、香り・味わい・価格・産地から自分に合うウイスキーを見つけるレビュー＆検索サイトです。">
+  <meta name="robots" content="index,follow">
+  <meta name="theme-color" content="#15352c">
+  <link rel="canonical" href="https://whiskycompass.jp/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WhiskyCompass">
+  <meta property="og:title" content="WhiskyCompass | あなたの一杯を、もっと確かに。">
+  <meta property="og:description" content="香り・味わい・価格からウイスキーを探せるレビューサイト。">
+  <meta property="og:url" content="https://whiskycompass.jp/">
+  <title>WhiskyCompass｜香り・味わいから探すウイスキーレビュー</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebSite","name":"WhiskyCompass","url":"https://whiskycompass.jp/","description":"香り・味わい・価格から自分に合うウイスキーを見つけるレビュー＆検索サイト","potentialAction":{"@type":"SearchAction","target":"https://whiskycompass.jp/?q={search_term_string}","query-input":"required name=search_term_string"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="WhiskyCompass ホーム"><span class="brand-mark">WC</span><span>Whisky<span>Compass</span><small>JAPANESE WHISKY GUIDE</small></span></a>
+    <nav aria-label="メインメニュー"><a href="#finder">探す</a><a href="#reviews">レビュー</a><a href="#learn">はじめての方へ</a></nav>
+    <button class="header-search" id="focusSearch" aria-label="ウイスキーを検索">⌕ <span>銘柄を検索</span></button>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-content">
+        <p class="eyebrow">FIND YOUR NEXT DRAM</p>
+        <h1 id="hero-title">あなたの一杯を、<br><em>もっと確かに。</em></h1>
+        <p class="hero-copy">香り、飲み方、予算から。<br>今日の気分に寄り添うウイスキーを見つけよう。</p>
+        <a class="button button-light" href="#finder">ウイスキーを探す <span>→</span></a>
+      </div>
+      <div class="hero-bottle" aria-hidden="true"><div class="cap"></div><div class="neck"></div><div class="bottle"><span>WHISKY<br><b>COMPASS</b></span></div><i></i></div>
+      <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+    </section>
+
+    <section class="quick-links" aria-label="人気の条件">
+      <a href="#reviews" data-preset="ハイボール"><b>01</b><span>食事に合う<br><strong>ハイボール</strong></span><i>→</i></a>
+      <a href="#reviews" data-preset="スモーキー"><b>02</b><span>個性を楽しむ<br><strong>スモーキー</strong></span><i>→</i></a>
+      <a href="#reviews" data-preset="フルーティー"><b>03</b><span>やさしい甘さ<br><strong>フルーティー</strong></span><i>→</i></a>
+      <a href="#reviews" data-preset="5000"><b>04</b><span>はじめの一本<br><strong>5,000円以内</strong></span><i>→</i></a>
+    </section>
+
+    <section class="finder section" id="finder" aria-labelledby="finder-title">
+      <div class="section-heading"><p class="eyebrow">WHISKY FINDER</p><h2 id="finder-title">好みから探す</h2><p>気になる条件を選ぶだけ。あなた好みのボトルを絞り込みます。</p></div>
+      <div class="finder-panel">
+        <label class="search-box"><span>⌕</span><input id="keyword" type="search" placeholder="銘柄名・キーワードで検索" autocomplete="off"></label>
+        <fieldset><legend>香り・味わい</legend><div class="chip-group" id="flavorFilters">
+          <button class="chip" data-filter="フルーティー">フルーティー</button><button class="chip" data-filter="スモーキー">スモーキー</button><button class="chip" data-filter="バニラ">バニラ</button><button class="chip" data-filter="華やか">華やか</button><button class="chip" data-filter="リッチ">リッチ</button>
+        </div></fieldset>
+        <fieldset><legend>スタイル</legend><div class="chip-group" id="styleFilters">
+          <button class="chip" data-filter="ジャパニーズ">ジャパニーズ</button><button class="chip" data-filter="スコッチ">スコッチ</button><button class="chip" data-filter="バーボン">バーボン</button><button class="chip" data-filter="ハイボール">ハイボール向き</button>
+        </div></fieldset>
+        <fieldset><legend>予算</legend><div class="price-row" id="priceFilters"><button data-price="3000">〜3,000円</button><button data-price="5000">3,000〜5,000円</button><button data-price="10000">5,000〜10,000円</button><button data-price="999999">10,000円〜</button></div></fieldset>
+        <button class="button button-dark" id="applyFilters">この条件で探す <span>→</span></button>
+      </div>
+    </section>
+
+    <section class="reviews section" id="reviews" aria-labelledby="review-title">
+      <div class="section-heading left"><p class="eyebrow">CURATED REVIEWS</p><h2 id="review-title">注目のボトル</h2></div>
+      <div class="results-meta"><span id="resultCount">4本のレビュー</span><button id="clearFilters" hidden>条件をクリア</button></div>
+      <div class="review-grid" id="reviewGrid"></div>
+    </section>
+
+    <section class="guide" id="learn"><div><p class="eyebrow">WHISKY BASICS</p><h2>迷ったら、<br>飲み方から。</h2><p>同じボトルでも、飲み方ひとつで表情は変わります。最初の一杯がもっと楽しみになる、小さなガイド。</p><a href="#faq" class="text-link">ウイスキーの楽しみ方 <span>→</span></a></div><div class="guide-cards"><article><span>01</span><h3>ハイボール</h3><p>食事と一緒に、軽やかに。</p></article><article><span>02</span><h3>ロック</h3><p>時間とともにほどける香り。</p></article><article><span>03</span><h3>ストレート</h3><p>造り手の個性をまっすぐに。</p></article></div></section>
+
+    <section class="faq section" id="faq"><div class="section-heading"><p class="eyebrow">FAQ</p><h2>はじめての方へ</h2></div><details open><summary>ウイスキー選びで最初に見るべきポイントは？</summary><p>まずは「飲み方」と「香りの好み」から選ぶのがおすすめです。食事と楽しむならハイボール向き、甘い香りが好きならフルーティーやバニラ系が目安になります。</p></details><details><summary>掲載している販売リンクについて</summary><p>WhiskyCompassはAmazon・楽天市場のアソシエイトプログラムを利用しています。価格や在庫は遷移先の販売ページでご確認ください。</p></details></section>
+  </main>
+  <footer><div class="brand footer-brand"><span class="brand-mark">WC</span><span>Whisky<span>Compass</span></span></div><p>20歳未満の飲酒は法律で禁止されています。飲酒運転は絶対にやめましょう。</p><div><a href="#top">運営方針</a><a href="#top">プライバシーポリシー</a><a href="#top">お問い合わせ</a></div><small>© 2026 WhiskyCompass</small></footer>
+  <dialog id="reviewDialog"><button class="modal-close" aria-label="閉じる">×</button><div id="modalContent"></div></dialog>
+  <script src="app.js"></script>
+</body>
+</html>
