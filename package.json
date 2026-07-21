@@ -1,8 +1,0 @@
-{
-  "name": "whisky-compass-publisher",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "publish:reviews": "node app.js"
-  }
-}
