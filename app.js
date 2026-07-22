@@ -396,6 +396,26 @@ async function createReview(item) {
   }
 }
 
+async function translateTitleToEnglish(title) {
+  if (!title) return '';
+  try {
+    const prompt = `次の日本語のウイスキー記事タイトルを、SEOに使える短い英語タイトルに翻訳してください。出力は必ずJSONのみで {"english":"..."} の形式にしてください。\n\n日本語タイトル: ${title}`;
+    const res = await fetch(LM_STUDIO_API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'system', content: 'あなたは日本語から英語への翻訳者です。出力は必ずJSONのみで返してください。' }, { role: 'user', content: prompt }], temperature: 0.2 })
+    });
+    if (!res.ok) throw new Error(`LocalLM ${res.status}`);
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
+    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    return (parsed && typeof parsed.english === 'string' && parsed.english.trim()) ? parsed.english.trim() : '';
+  } catch (err) {
+    console.warn('translateTitleToEnglish failed:', err.message);
+    return '';
+  }
+}
+
 async function main() {
   await fs.mkdir(path.dirname(OUTPUT_FILE), { recursive: true });
   if (!RAKUTEN_APP_ID || !RAKUTEN_ACCESS_KEY) {
@@ -458,6 +478,8 @@ async function main() {
     }
     item.articleTitle = finalTitle;
     item.articleBody = article.body;
+    const englishTitle = await translateTitleToEnglish(item.articleTitle || item.name);
+    item.slug = slugify(englishTitle || item.articleTitle || item.name);
     item.amazon = amazonSearchUrl(item.articleTitle || item.name);
     newProducts.push(item);
     newTitles.add(finalTitleKey);

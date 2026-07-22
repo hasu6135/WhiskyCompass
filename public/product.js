@@ -9,7 +9,7 @@
   const container = q('#productContent');
   if(!id){ container.innerHTML = '<p>商品IDが指定されていません。</p>'; return }
   const list = Array.isArray(window.WHISKY_DATA) ? window.WHISKY_DATA : [];
-  const item = list.find(w=>w.id===id);
+  const item = list.find(w=>w.id===id || w.slug===id);
   if(!item){ container.innerHTML = '<p>該当する商品が見つかりませんでした。</p>'; return }
 
   container.innerHTML = `
