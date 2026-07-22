@@ -98,11 +98,11 @@ async function extractOrigin(item) {
 ショップ名: ${item.shopName || ''}
 
 この商品の原産国または生産国と販売元または生産者名またはブランドを、次の形式で出力してください。
-原産国または生産国 / 販売元または生産者名またはブランド
-例. 日本産 / サントリー
+原産国 / ブランド
 
-もし原産国が判別できない場合は「原産国不明」、ブランドが判別できない場合は「ブランド不明」としてください。
-出力は必ずJSONのみで {"origin":"..."} 形式で返してください。`; 
+原産国は～～産とすること。
+原産国が判別できない場合は「原産国不明」、ブランドが判別できない場合は「ブランド不明」としてください。
+出力は必ずJSONのみで {"origin":"...","brand":"..."} 形式で返してください。`; 
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -119,13 +119,30 @@ async function extractOrigin(item) {
     const content = data.choices?.[0]?.message?.content || '';
     const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
     const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-    if (parsed && typeof parsed.origin === 'string' && parsed.origin.trim()) {
-      return cleanTitle(parsed.origin);
+    if (parsed) {
+      const originRaw = typeof parsed.origin === 'string' ? parsed.origin.trim() : '';
+      const brandRaw = typeof parsed.brand === 'string' ? parsed.brand.trim() : '';
+      const originValue = normalizeOriginValue(originRaw || '');
+      const brandValue = brandRaw || '';
+      if (originValue || brandValue) {
+        const originText = originValue || '原産国不明';
+        const brandText = brandValue || 'ブランド不明';
+        return cleanTitle(`${originText} / ${brandText}`);
+      }
     }
   } catch (err) {
     console.warn('extractOrigin failed:', err.message);
   }
   return fallback;
+}
+
+function normalizeOriginValue(origin) {
+  if (!origin) return '';
+  const normalized = origin.trim().replace(/^(日本|日本国)$/, '日本産').replace(/^英国$/, 'イギリス産');
+  if (/産$/.test(normalized) || normalized === '原産国不明') {
+    return normalized;
+  }
+  return `${normalized}産`;
 }
 
 function amazonSearchUrl(title) {
