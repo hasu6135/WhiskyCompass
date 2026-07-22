@@ -55,6 +55,40 @@ function styleFor(title) {
   return ['スコッチ'];
 }
 
+function extractOrigin(item) {
+  const text = cleanTitle(`${item.itemName} ${item.itemCaption || ''}`);
+  const countryPatterns = [
+    {regex: /イギリス産|英国産|スコットランド産|アイラ|スペイサイド|ハイランド|ローランド|スコッチ/i, label: 'イギリス産'},
+    {regex: /日本産|国産|日本製|ジャパニーズ|サントリー|ニッカ|竹鶴|山崎|白州|響|知多|余市|宮城峡/i, label: '日本産'},
+    {regex: /アメリカ産|米国産|アメリカ|USA|U\.S\.|ケンタッキー|バーボン/i, label: 'アメリカ産'},
+    {regex: /カナダ産|カナディア|カナダ/i, label: 'カナダ産'},
+    {regex: /アイルランド産|アイルランド|アイリッシュ/i, label: 'アイルランド産'},
+    {regex: /フランス産|フランス/i, label: 'フランス産'}
+  ];
+  const brandPatterns = [
+    'サントリー', 'ニッカ', '山崎', '白州', '響', '知多', '余市', '宮城峡', '竹鶴',
+    'ザ・マッカラン', 'マッカラン', 'ラフロイグ', 'ボウモア', 'メーカーズマーク',
+    'ジャックダニエル', 'バランタイン', 'ボウモア', 'タリスカー', 'ジョニーウォーカー',
+    'ヘネシー', 'グレンフィディック', 'グレンリベット', 'アードベッグ', 'カナディアンクラブ'
+  ];
+  const country = countryPatterns.find(p => p.regex.test(text))?.label || '';
+  let brand = '';
+  for (const candidate of brandPatterns) {
+    const regex = new RegExp(candidate.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
+    if (regex.test(text)) {
+      brand = candidate;
+      break;
+    }
+  }
+  if (!brand && item.shopName && !/rakuten/i.test(item.shopName)) {
+    brand = item.shopName;
+  }
+  if (!country && /ウイスキー|シングルモルト|バーボン|ジャパニーズ|スコッチ/i.test(text)) {
+    brand = brand || item.shopName || '';
+  }
+  return [country || '原産国不明', brand || 'ブランド不明'].join(' / ');
+}
+
 function amazonSearchUrl(title) {
   return `https://www.amazon.co.jp/s?k=${encodeURIComponent(title)}&tag=${encodeURIComponent(AMAZON_TAG)}`;
 }
@@ -130,7 +164,7 @@ function normaliseRakutenItem(item, source, index) {
     id: `rakuten-${item.itemCode || `${source}-${index}`}`.replace(/[^a-zA-Z0-9_-]/g, '-'),
     slug: slugify(title + '-' + (item.itemCode || index)),
     name: title,
-    origin: `${source === 'popular' ? 'POPULAR ON RAKUTEN' : 'NEW ON RAKUTEN'} / ${item.shopName || 'Rakuten'}`,
+    origin: extractOrigin(item),
     score: Number(item.reviewAverage || 0).toFixed(1),
     price: Number(item.itemPrice || 0),
     flavor: tagsFor(title, item.itemCaption),
