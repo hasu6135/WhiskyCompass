@@ -266,10 +266,23 @@ function findImageUrl(value) {
   return '';
 }
 
+function normalizeRakutenImageUrl(url) {
+  if (typeof url !== 'string' || !url.trim()) return '';
+  let normalized = url.trim();
+  if (/thumbnail\.image\.rakuten\.co\.jp/.test(normalized)) {
+    normalized = normalized.replace(/_ex=\d+x\d+/g, '_ex=512x512');
+    if (!/_ex=\d+x\d+/.test(normalized)) {
+      normalized += (normalized.includes('?') ? '&' : '?') + '_ex=512x512';
+    }
+  }
+  if (normalized.startsWith('//')) normalized = `https:${normalized}`;
+  return normalized;
+}
+
 function getRakutenImageUrl(item) {
   const candidates = [
-    item.mediumImageUrls,
     item.largeImageUrls,
+    item.mediumImageUrls,
     item.smallImageUrls,
     item.imageUrls,
     item.imageUrl ? [item] : null
@@ -278,11 +291,14 @@ function getRakutenImageUrl(item) {
     if (!Array.isArray(list) || !list.length) continue;
     const imageObj = list[0];
     const url = imageObj?.imageUrl || imageObj?.url || imageObj?.image || '';
-    if (url) return url;
+    const normalized = normalizeRakutenImageUrl(url);
+    if (normalized) return normalized;
   }
   const fallback = item.imageUrl || item.image || '';
-  if (typeof fallback === 'string' && fallback.trim()) return fallback.trim();
-  return findImageUrl(item);
+  const normalizedFallback = normalizeRakutenImageUrl(fallback);
+  if (normalizedFallback) return normalizedFallback;
+  const found = findImageUrl(item);
+  return normalizeRakutenImageUrl(found);
 }
 
 function normaliseRakutenItem(item, source, index) {
@@ -376,7 +392,7 @@ async function createNameSummary(item) {
 async function createReview(item) {
   const rawName = item.rawName || item.name;
   const fallback = `${rawName}は${item.flavor.join('・')}の印象を楽しみたい方に向く候補です。販売ページで容量・度数・価格をご確認ください。`;
-  console.log(`Generating LocalLM review for ${rawName}...`);
+  console.log(`\nGenerating LocalLM review for ${rawName}...`);
   try {
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
