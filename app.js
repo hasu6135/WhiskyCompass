@@ -277,6 +277,7 @@ async function main() {
 
   const existing = await loadExistingProducts();
   const existingTitles = new Set(existing.map(w => canonicalTitle(w.articleTitle || w.name)));
+  const newTitles = new Set();
 
   const [popularRaw, latestRaw] = await Promise.all([rakutenSearch('-reviewCount'), rakutenSearch('-updateTimestamp')]);
   // Using Rakuten only; Amazon affiliate links will point to Amazon search results based on title
@@ -305,24 +306,30 @@ async function main() {
 
   const newProducts = [];
   for (const item of products) {
-    const titleKey = canonicalTitle(formatArticleTitle(item));
-    if (existingTitles.has(titleKey)) {
-      console.log(`Skipping duplicate article title: ${item.name} -> ${formatArticleTitle(item)}`);
+    const candidateTitle = formatArticleTitle(item);
+    const titleKey = canonicalTitle(candidateTitle);
+    if (existingTitles.has(titleKey) || newTitles.has(titleKey)) {
+      console.log(`Skipping duplicate article title (pre-check): ${item.name} -> ${candidateTitle}`);
       continue;
     }
     item.note = await createReview(item);
     const article = await createArticle(item);
-    item.articleTitle = article.title;
+    const finalTitle = article.title || candidateTitle;
+    const finalTitleKey = canonicalTitle(finalTitle);
+    if (existingTitles.has(finalTitleKey) || newTitles.has(finalTitleKey)) {
+      console.log(`Skipping duplicate article title (post-AI): ${item.name} -> ${finalTitle}`);
+      continue;
+    }
+    item.articleTitle = finalTitle;
     item.articleBody = article.body;
     item.amazon = amazonSearchUrl(item.articleTitle || item.name);
     newProducts.push(item);
-    existingTitles.add(canonicalTitle(item.articleTitle || item.name));
+    newTitles.add(finalTitleKey);
   }
 
   const mergedProducts = [...existing, ...newProducts];
   await writeProducts(mergedProducts);
   console.log(`Published ${newProducts.length} new Rakuten product reviews to ${OUTPUT_FILE} (total ${mergedProducts.length})`);
-  console.log(`Published ${products.length} Rakuten product reviews to ${OUTPUT_FILE}`);
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1; });
