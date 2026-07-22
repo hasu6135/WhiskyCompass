@@ -55,8 +55,8 @@ function styleFor(title) {
   return ['スコッチ'];
 }
 
-function extractOrigin(item) {
-  const text = cleanTitle(`${item.itemName} ${item.itemCaption || ''}`);
+function extractOriginFallback(item) {
+  const text = cleanTitle(`${item.rawName} ${item.caption || ''} ${item.shopName || ''}`);
   const countryPatterns = [
     {regex: /イギリス産|英国産|スコットランド産|アイラ|スペイサイド|ハイランド|ローランド|スコッチ/i, label: 'イギリス産'},
     {regex: /日本産|国産|日本製|ジャパニーズ|サントリー|ニッカ|竹鶴|山崎|白州|響|知多|余市|宮城峡/i, label: '日本産'},
@@ -87,6 +87,44 @@ function extractOrigin(item) {
     brand = brand || item.shopName || '';
   }
   return [country || '原産国不明', brand || 'ブランド不明'].join(' / ');
+}
+
+async function extractOrigin(item) {
+  const fallback = extractOriginFallback(item);
+  try {
+    const prompt = `商品情報:
+名前: ${item.rawName}
+説明: ${item.caption || ''}
+ショップ名: ${item.shopName || ''}
+
+この商品の原産国または生産国と販売元または生産者名を、次の形式で出力してください。
+原産国 / ブランド
+
+もし原産国が判別できない場合は「原産国不明」、ブランドが判別できない場合は「ブランド不明」としてください。
+出力は必ずJSONのみで {"origin":"..."} 形式で返してください。`; 
+    const response = await fetch(LM_STUDIO_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: 'あなたは日本語の編集者です。出力は必ずJSONのみで返してください。' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.2
+      })
+    });
+    if (!response.ok) throw new Error(`LocalLM ${response.status}`);
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
+    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    if (parsed && typeof parsed.origin === 'string' && parsed.origin.trim()) {
+      return cleanTitle(parsed.origin);
+    }
+  } catch (err) {
+    console.warn('extractOrigin failed:', err.message);
+  }
+  return fallback;
 }
 
 function amazonSearchUrl(title) {
@@ -183,8 +221,10 @@ function normaliseRakutenItem(item, source, index) {
   return {
     id: `rakuten-${item.itemCode || `${source}-${index}`}`.replace(/[^a-zA-Z0-9_-]/g, '-'),
     slug: slugify(title + '-' + (item.itemCode || index)),
+    rawName: title,
     name: title,
-    origin: extractOrigin(item),
+    origin: '',
+    shopName: item.shopName || '',
     score: Number(item.reviewAverage || 0).toFixed(1),
     price: Number(item.itemPrice || 0),
     flavor: tagsFor(title, item.itemCaption),
@@ -204,7 +244,7 @@ function normaliseRakutenItem(item, source, index) {
 
 
 function formatArticleTitle(item) {
-  const original = cleanTitle(item.name || '');
+  const original = cleanTitle(item.rawName || item.name || '');
   const ageMatch = original.match(/\d{1,2}(?:\.\d+)?\s*(?:年|歳|Y|y|yr|yrs|years?)/i);
   const capacityMatch = original.match(/\d+(?:\.\d+)?\s*(?:ml|mL|ML|l|L|リットル|㎖|ℓ)/i);
   const age = ageMatch ? ageMatch[0].replace(/\s+/g, '') : '';
@@ -307,11 +347,15 @@ async function main() {
     ...latestRaw.map(x => [x, 'latest'])
   ];
 
-  const products = candidates
+  let products = candidates
     .filter(([item]) => isBottle(item))
     .map(([item, source], index) => normaliseRakutenItem(item, source, index))
-    .filter(item => item.name && !seen.has(item.name) && seen.add(item.name))
-    .slice(0, 60);
+    .filter(item => item.name && !seen.has(item.name) && seen.add(item.name));
+
+  products = products.slice(0, 60);
+  for (const item of products) {
+    item.origin = await extractOrigin(item);
+  }
 
   if (products.length === 0) {
     throw new Error(`No publishable whisky products found (popular: ${popularRaw.length}, latest: ${latestRaw.length}). Existing public data was kept.`);
