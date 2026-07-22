@@ -233,9 +233,26 @@ function isBottle(item) {
   return !/グラス|タンブラー|チョコ|ケーキ|ハイボール缶|セット.*グラス|ソーダ|文庫|単行本|書籍|漫画|くじ/i.test(text);
 }
 
+function getRakutenImageUrl(item) {
+  const candidates = [
+    item.mediumImageUrls,
+    item.largeImageUrls,
+    item.smallImageUrls,
+    item.imageUrls,
+    item.imageUrl ? [item] : null
+  ];
+  for (const list of candidates) {
+    if (!Array.isArray(list) || !list.length) continue;
+    const imageObj = list[0];
+    const url = imageObj?.imageUrl || imageObj?.url || imageObj?.image || '';
+    if (url) return url;
+  }
+  return item.imageUrl || item.image || '';
+}
+
 function normaliseRakutenItem(item, source, index) {
   const title = cleanTitle(item.itemName);
-  const image = item.mediumImageUrls?.[0]?.imageUrl || '';
+  const image = getRakutenImageUrl(item);
   return {
     id: `rakuten-${item.itemCode || `${source}-${index}`}`.replace(/[^a-zA-Z0-9_-]/g, '-'),
     slug: slugify(title + '-' + (item.itemCode || index)),
