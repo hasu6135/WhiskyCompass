@@ -301,6 +301,8 @@ async function main() {
     console.log(`${String(index + 1).padStart(2, '0')}. [${item.source}] ${item.name} — ¥${item.price.toLocaleString('ja-JP')}`);
   });
 
+  console.log('\n');
+
   const newProducts = [];
   for (const item of products) {
     const titleKey = canonicalTitle(formatArticleTitle(item));
