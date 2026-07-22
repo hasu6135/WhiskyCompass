@@ -233,6 +233,38 @@ function isBottle(item) {
   return !/グラス|タンブラー|チョコ|ケーキ|ハイボール缶|セット.*グラス|ソーダ|文庫|単行本|書籍|漫画|くじ/i.test(text);
 }
 
+function findImageUrl(value) {
+  const imagePattern = /^https?:\/\/.+\.(?:jpg|jpeg|png|webp|gif)(?:\?.*)?$/i;
+  const containsImagePattern = /https?:\/\/.+\.(?:jpg|jpeg|png|webp|gif)/i;
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (imagePattern.test(trimmed)) return trimmed;
+    if (containsImagePattern.test(trimmed)) {
+      const match = trimmed.match(containsImagePattern);
+      return match ? match[0] : '';
+    }
+    return '';
+  }
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const url = findImageUrl(entry);
+      if (url) return url;
+    }
+    return '';
+  }
+
+  if (value && typeof value === 'object') {
+    for (const key of Object.keys(value)) {
+      const url = findImageUrl(value[key]);
+      if (url) return url;
+    }
+  }
+
+  return '';
+}
+
 function getRakutenImageUrl(item) {
   const candidates = [
     item.mediumImageUrls,
@@ -247,7 +279,9 @@ function getRakutenImageUrl(item) {
     const url = imageObj?.imageUrl || imageObj?.url || imageObj?.image || '';
     if (url) return url;
   }
-  return item.imageUrl || item.image || '';
+  const fallback = item.imageUrl || item.image || '';
+  if (typeof fallback === 'string' && fallback.trim()) return fallback.trim();
+  return findImageUrl(item);
 }
 
 function normaliseRakutenItem(item, source, index) {
