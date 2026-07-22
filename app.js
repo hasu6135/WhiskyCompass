@@ -224,9 +224,10 @@ function formatArticleTitle(item) {
 async function createArticle(item) {
   // Use a title fallback from the Rakuten-normalized title, but let LocalLM shape the final article title and body.
   const fallbackTitle = formatArticleTitle(item);
-  const fallbackBody = item.note || `${item.name} はおすすめのウイスキーです。詳細は販売ページでご確認ください。`;
+  const rawName = item.rawName || item.name;
+  const fallbackBody = item.note || `${rawName} はおすすめのウイスキーです。詳細は販売ページでご確認ください。`;
   try {
-    const prompt = `商品情報:\n名前: ${item.name}\n価格: ${item.price || ''}\n説明: ${item.caption || ''}\nタグ: ${(item.flavor||[]).join('、')}\n\n出力形式: JSON で {"title":"...","body":"..."} のみを返してください。タイトルは「ウイスキー名 銘柄名 熟成年数 容量」の形式を優先して短く、本文は120〜300文字の日本語で説明を書くこと。`;
+    const prompt = `商品情報:\n名前: ${rawName}\n価格: ${item.price || ''}\n説明: ${item.caption || ''}\nタグ: ${(item.flavor||[]).join('、')}\n\n出力形式: JSON で {"title":"...","body":"..."} のみを返してください。タイトルは「ウイスキー名 銘柄名 熟成年数 容量」の形式を優先して短く、本文は120〜300文字の日本語で説明を書くこと。`;
     const res = await fetch(LM_STUDIO_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: 'system', content: 'あなたは日本語の編集者です。出力は必ずJSONのみで返してください。' }, { role: 'user', content: prompt }], temperature: 0.4 }) });
     if (!res.ok) throw new Error(`LocalLM ${res.status}`);
     const data = await res.json();
@@ -244,9 +245,28 @@ async function createArticle(item) {
   }
 }
 
+async function createNameSummary(item) {
+  const rawName = item.rawName || item.name;
+  const fallback = rawName;
+  try {
+    const prompt = `商品情報:\n名前: ${rawName}\n価格: ${item.price || ''}\n説明: ${item.caption || ''}\nタグ: ${(item.flavor||[]).join('、')}\n\n出力形式: JSON で {"name":"..."} のみを返してください。このウイスキーを一言で表現する文言を、20〜40文字の日本語で作成してください。`;
+    const res = await fetch(LM_STUDIO_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: 'system', content: 'あなたは日本語のコピーライターです。出力は必ずJSONのみで返してください。' }, { role: 'user', content: prompt }], temperature: 0.4 }) });
+    if (!res.ok) throw new Error(`LocalLM ${res.status}`);
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
+    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    return (parsed && parsed.name) ? parsed.name : fallback;
+  } catch (err) {
+    console.warn('createNameSummary failed:', err.message);
+    return fallback;
+  }
+}
+
 async function createReview(item) {
-  const fallback = `${item.name}は${item.flavor.join('・')}の印象を楽しみたい方に向く候補です。販売ページで容量・度数・価格をご確認ください。`;
-  console.log(`Generating LocalLM review for ${item.name}...`);
+  const rawName = item.rawName || item.name;
+  const fallback = `${rawName}は${item.flavor.join('・')}の印象を楽しみたい方に向く候補です。販売ページで容量・度数・価格をご確認ください。`;
+  console.log(`Generating LocalLM review for ${rawName}...`);
   try {
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -254,7 +274,7 @@ async function createReview(item) {
         ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.35,
         messages: [
           { role: 'system', content: 'あなたは日本のウイスキー編集者です。与えられた販売情報だけを根拠に、断定・受賞歴・在庫の主張をせず、80〜120字の中立な紹介文を日本語で作成してください。HTMLは不要です。' },
-          { role: 'user', content: `商品名: ${item.name}\n商品説明: ${item.caption || 'なし'}\n価格: ${item.price}円\nレビュー平均: ${item.score}\n想定タグ: ${item.flavor.join('、')}` }
+          { role: 'user', content: `商品名: ${rawName}\n商品説明: ${item.caption || 'なし'}\n価格: ${item.price}円\nレビュー平均: ${item.score}\n想定タグ: ${item.flavor.join('、')}` }
         ]
       })
     });
@@ -262,7 +282,7 @@ async function createReview(item) {
     const data = await response.json();
     return String(data.choices?.[0]?.message?.content || fallback).replace(/<[^>]*>/g, '').trim().slice(0, 260);
   } catch (error) {
-    console.warn(`LocalLM review skipped for ${item.name}: ${error.message}`);
+    console.warn(`LocalLM review skipped for ${rawName}: ${error.message}`);
     return fallback;
   }
 }
@@ -306,10 +326,13 @@ async function main() {
 
   const newProducts = [];
   for (const item of products) {
+    const summaryName = await createNameSummary(item);
+    item.name = summaryName;
+
     const candidateTitle = formatArticleTitle(item);
     const titleKey = canonicalTitle(candidateTitle);
     if (existingTitles.has(titleKey) || newTitles.has(titleKey)) {
-      console.log(`Skipping duplicate article title (pre-check): ${item.name} -> ${candidateTitle}`);
+      console.log(`Skipping duplicate article title (pre-check): ${item.rawName} -> ${candidateTitle}`);
       continue;
     }
     item.note = await createReview(item);
@@ -317,7 +340,7 @@ async function main() {
     const finalTitle = article.title || candidateTitle;
     const finalTitleKey = canonicalTitle(finalTitle);
     if (existingTitles.has(finalTitleKey) || newTitles.has(finalTitleKey)) {
-      console.log(`Skipping duplicate article title (post-AI): ${item.name} -> ${finalTitle}`);
+      console.log(`Skipping duplicate article title (post-AI): ${item.rawName} -> ${finalTitle}`);
       continue;
     }
     item.articleTitle = finalTitle;
