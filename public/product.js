@@ -16,7 +16,8 @@
     <div class="product-hero">
       <div class="product-image">${item.image?`<img src="${item.image}" alt="${item.label||item.name}" style="width:100%;height:100%;object-fit:contain">`:'画像無し'}</div>
       <div class="product-meta">
-        <h1>${item.name}</h1>
+        <h1>${item.articleTitle||item.name}</h1>
+        ${item.articleTitle && item.articleTitle !== item.name ? `<p class="product-subtitle">${item.name}</p>` : ''}
         <div class="origin">${item.origin||''}</div>
         <div class="rating">★★★★★ <b>${item.score||''}</b></div>
         <div class="price">${formatPrice(item.price)}</div>

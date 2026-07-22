@@ -66,7 +66,7 @@ async function rakutenSearch(sort) {
     affiliateId: RAKUTEN_AFFILIATE_ID || '',
     keyword: 'ウイスキー',
     genreId: RAKUTEN_WHISKY_GENRE_ID,
-    hits: '2',
+    hits: '1',
     page: '1',
     sort,
     availability: '1',
@@ -192,6 +192,7 @@ async function createArticle(item) {
 
 async function createReview(item) {
   const fallback = `${item.name}は${item.flavor.join('・')}の印象を楽しみたい方に向く候補です。販売ページで容量・度数・価格をご確認ください。`;
+  console.log(`Generating LocalLM review for ${item.name}...`);
   try {
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
