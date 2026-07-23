@@ -45,6 +45,46 @@ function slugify(text = '') {
   return cleanTitle(text).toLowerCase().replace(/[^a-z0-9\u3040-\u30ff\u4e00-\u9faf]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
 }
 
+function safeJsonParse(content) {
+  if (!content) return null;
+  const raw = String(content).trim();
+  const candidate = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
+  const attempts = [candidate,
+    candidate.replace(/[\r\n]+/g, ' ')
+             .replace(/[“”]/g, '"')
+             .replace(/[‘’]/g, "'")
+             .replace(/,\s*([}\]])/g, '$1')
+  ];
+
+  for (const attempt of attempts) {
+    try {
+      return JSON.parse(attempt);
+    } catch (_) {
+      // continue to fallback heuristics
+    }
+  }
+
+  const cleaned = attempts[1];
+  const extracted = {};
+  const textMatch = cleaned.match(/["']text["']\s*:\s*["']([^"']*)["']/);
+  if (textMatch) extracted.text = textMatch[1].trim();
+  const waysMatch = cleaned.match(/["']ways["']\s*:\s*\[([\s\S]*?)\]/);
+  if (waysMatch) {
+    extracted.ways = Array.from(waysMatch[1].matchAll(/["']([^"']+)["']/g)).map(m => m[1].trim()).filter(Boolean);
+  }
+  const commentsMatch = cleaned.match(/["']comments["']\s*:\s*\[([\s\S]*)\]\s*$/);
+  if (commentsMatch) {
+    extracted.comments = Array.from(commentsMatch[1].matchAll(/\{([\s\S]*?)\}/g)).map(match => {
+      const objectText = match[1];
+      const name = objectText.match(/["']name["']\s*:\s*["']([^"']*)["']/)?.[1]?.trim();
+      const role = objectText.match(/["']role["']\s*:\s*["']([^"']*)["']/)?.[1]?.trim();
+      const text = objectText.match(/["']text["']\s*:\s*["']([^"']*)["']/)?.[1]?.trim();
+      return text ? { name: name || 'ユーザー', role: role || 'ウイスキー好き', text } : null;
+    }).filter(Boolean);
+  }
+  return Object.keys(extracted).length ? extracted : null;
+}
+
 function tagsFor(title, caption = '') {
   const text = `${title} ${caption}`.toLowerCase();
   const tags = [];
@@ -436,8 +476,7 @@ async function createSectionText(item, sectionTitle, description, fallbackText) 
     if (!response.ok) throw new Error(`LocalLM ${response.status}`);
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
-    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
-    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    const parsed = safeJsonParse(content);
     return (parsed && parsed.text) ? String(parsed.text).replace(/<[^>]*>/g, '').trim() : fallback;
   } catch (error) {
     console.warn(`createSectionText failed for ${sectionTitle}: ${error.message}`);
@@ -449,7 +488,7 @@ async function createWays(item) {
   const rawName = item.rawName || item.name;
   const fallback = ['ストレート', 'ロック', 'ハイボール'];
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーに向いているおすすめの飲み方を、3つの短い日本語の文字列で作成してください。出力は必ずJSONのみで {"ways":["...","...","..."]} 形式で返してください。`;
+    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーに向いているおすすめの飲み方を、3つの短い日本語の文字列で作成してください。出力は必ずJSONのみで {"ways":["...","...","..."]} 形式で返してください。文字列の中に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -463,8 +502,7 @@ async function createWays(item) {
     if (!response.ok) throw new Error(`LocalLM ${response.status}`);
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
-    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
-    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    const parsed = safeJsonParse(content);
     return Array.isArray(parsed?.ways) && parsed.ways.length ? parsed.ways.map(String).slice(0, 3) : fallback;
   } catch (error) {
     console.warn(`createWays failed: ${error.message}`);
@@ -480,7 +518,7 @@ async function createComments(item) {
     { name: '中村さん', role: 'ギフト検討中', text: '価格も手頃でラベルが落ち着いているため、プレゼントに選びやすいボトルです。' }
   ];
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーについて、読者が参考にしたくなる口コミ風コメントを3つ作成してください。各コメントは「name」「role」「text」を持つJSONオブジェクトで表し、出力は必ずJSONのみで {"comments":[{"name":"...","role":"...","text":"..."},...]} 形式で返してください。`;
+    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーについて、読者が参考にしたくなる口コミ風コメントを3つ作成してください。各コメントは「name」「role」「text」を持つJSONオブジェクトで表し、出力は必ずJSONのみで {"comments":[{"name":"...","role":"...","text":"..."},...]} 形式で返してください。コメントの本文に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -494,8 +532,7 @@ async function createComments(item) {
     if (!response.ok) throw new Error(`LocalLM ${response.status}`);
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
-    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
-    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    const parsed = safeJsonParse(content);
     if (Array.isArray(parsed?.comments) && parsed.comments.length) {
       return parsed.comments.slice(0, 3).map(c => ({
         name: String(c.name || '').trim() || 'ユーザー',
