@@ -33,15 +33,8 @@
   </header>
 
   <main id="top">
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-content">
-        <p class="eyebrow">FIND YOUR NEXT DRAM</p>
-        <h1 id="hero-title">あなたの一杯を、<br><em>もっと確かに。</em></h1>
-        <p class="hero-copy">香り、飲み方、予算から。<br>今日の気分に寄り添うウイスキーを見つけよう。</p>
-        <a class="button button-light" href="#finder">ウイスキーを探す <span>→</span></a>
-      </div>
-      <div class="hero-bottle" aria-hidden="true"><div class="cap"></div><div class="neck"></div><div class="bottle"><span>WHISKY<br><b>COMPASS</b></span></div><i></i></div>
-      <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+    <section class="hero">
+      <div class="hero-image"><img src="header.png" alt="WhiskyCompass" loading="eager"></div>
     </section>
 
     <section class="quick-links" aria-label="人気の条件">
@@ -62,21 +55,24 @@
           <button class="chip" data-filter="ジャパニーズ">ジャパニーズ</button><button class="chip" data-filter="スコッチ">スコッチ</button><button class="chip" data-filter="バーボン">バーボン</button><button class="chip" data-filter="ハイボール">ハイボール向き</button>
         </div></fieldset>
         <fieldset><legend>予算</legend><div class="price-row" id="priceFilters"><button data-price="3000">〜3,000円</button><button data-price="5000">3,000〜5,000円</button><button data-price="10000">5,000〜10,000円</button><button data-price="999999">10,000円〜</button></div></fieldset>
-        <button class="button button-dark" id="applyFilters">この条件で探す <span>→</span></button>
+        <div class="finder-actions">
+          <button class="button button-light" id="clearFilters" hidden>リセット</button>
+          <button class="button button-dark" id="applyFilters">この条件で探す <span>→</span></button>
+        </div>
       </div>
     </section>
 
     <section class="reviews section" id="reviews" aria-labelledby="review-title">
       <div class="section-heading left"><p class="eyebrow">CURATED REVIEWS</p><h2 id="review-title">注目のボトル</h2></div>
-      <div class="results-meta"><span id="resultCount">4本のレビュー</span><button id="clearFilters" hidden>条件をクリア</button></div>
+      <div class="results-meta"><span id="resultCount">4本のレビュー</span></div>
       <div class="review-grid" id="reviewGrid"></div>
     </section>
 
-    <section class="guide" id="learn"><div><p class="eyebrow">WHISKY BASICS</p><h2>迷ったら、<br>飲み方から。</h2><p>同じボトルでも、飲み方ひとつで表情は変わります。最初の一杯がもっと楽しみになる、小さなガイド。</p><a href="#faq" class="text-link">ウイスキーの楽しみ方 <span>→</span></a></div><div class="guide-cards"><article><span>01</span><h3>ハイボール</h3><p>食事と一緒に、軽やかに。</p></article><article><span>02</span><h3>ロック</h3><p>時間とともにほどける香り。</p></article><article><span>03</span><h3>ストレート</h3><p>造り手の個性をまっすぐに。</p></article></div></section>
+    <section class="guide" id="learn"><div><p class="eyebrow">WHISKY BASICS</p><h2>迷ったら、<br>飲み方から。</h2><p>同じボトルでも、飲み方ひとつで表情は変わります。最初の一杯がもっと楽しみになる、小さなガイド。</p><ul class="beginner-list"><li>まずは「飲み方」を決める：ハイボール、ロック、ストレートで香りの印象が変わる</li><li>次に「価格帯」を決める：3,000〜5,000円のボトルは初心者にも選びやすい</li><li>最後に「香りのタイプ」を選ぶ：やさしいフルーティー、しっかりスモーキーなど</li></ul><a href="#faq" class="text-link">はじめての方へ詳しく見る <span>→</span></a></div><div class="guide-cards"><article><span>01</span><h3>ハイボール</h3><p>食事と合わせやすく、爽やかな香りを楽しみたいときに。</p></article><article><span>02</span><h3>ロック</h3><p>氷が溶けるほどに変化する香りが、ゆっくり味わえます。</p></article><article><span>03</span><h3>ストレート</h3><p>ウイスキーの個性をそのまま感じたいときにおすすめ。</p></article><article><span>04</span><h3>初心者向け</h3><p>バニラやはちみつ系のやさしい香りから入ると安心です。</p></article></div></section>
 
-    <section class="faq section" id="faq"><div class="section-heading"><p class="eyebrow">FAQ</p><h2>はじめての方へ</h2></div><details open><summary>ウイスキー選びで最初に見るべきポイントは？</summary><p>まずは「飲み方」と「香りの好み」から選ぶのがおすすめです。食事と楽しむならハイボール向き、甘い香りが好きならフルーティーやバニラ系が目安になります。</p></details><details><summary>掲載している販売リンクについて</summary><p>WhiskyCompassはAmazon・楽天市場のアソシエイトプログラムを利用しています。価格や在庫は遷移先の販売ページでご確認ください。</p></details></section>
+    <section class="faq section" id="faq"><div class="section-heading"><p class="eyebrow">FAQ</p><h2>はじめての方へ</h2></div><p class="faq-intro">初めてウイスキーを選ぶなら、「飲み方」「香り」「予算」の3つを順番に決めていくのがポイントです。</p><details open><summary>ウイスキー選びで最初に見るべきポイントは？</summary><p>まずは「飲み方」と「香りの好み」から選ぶのがおすすめです。食事と楽しむならハイボール向き、甘い香りが好きならフルーティーやバニラ系が目安になります。</p></details><details><summary>どの予算帯から始めるのが良いですか？</summary><p>3,000〜5,000円帯は入門用としてバランスが良く、香りと味わいの違いを試しやすい価格帯です。</p></details><details><summary>初心者におすすめの飲み方は？</summary><p>まずはハイボールで軽やかさを確認し、次にロックやストレートで深みを比べると選びやすくなります。</p></details><details><summary>香りの違いをどう見分ければよいですか？</summary><p>果実や花のような香りならフルーティー系。焚き火や土の香りがあればスモーキー系です。まずは「好きな香り」を基準にしましょう。</p></details><details><summary>ウイスキーの保存方法で気をつけることは？</summary><p>直射日光を避け、温度変化が少ない場所に保管します。開封後はできるだけ早めに飲みきると香りが落ちにくいです。</p></details></section>
   </main>
-  <footer><div class="brand footer-brand"><span class="brand-mark">WC</span><span>Whisky<span>Compass</span></span></div><p>20歳未満の飲酒は法律で禁止されています。飲酒運転は絶対にやめましょう。</p><div><a href="#top">運営方針</a><a href="#top">プライバシーポリシー</a><a href="#top">お問い合わせ</a></div><small>© 2026 WhiskyCompass</small></footer>
+  <footer><div class="brand footer-brand"><span class="brand-mark">WC</span><span>Whisky<span>Compass</span></span></div><p>20歳未満の飲酒は法律で禁止されています。飲酒運転は絶対にやめましょう。</p><p class="affiliate-disclaimer">当サイトはAmazonアソシエイト・楽天アフィリエイトの参加者です。<br>掲載リンクからのご購入により、サイト運営者に報酬が発生する場合があります。</p><div><a href="#top">運営方針</a><a href="#top">プライバシーポリシー</a><a href="#top">お問い合わせ</a></div><small>© 2026 WhiskyCompass</small></footer>
   <dialog id="reviewDialog"><button class="modal-close" aria-label="閉じる">×</button><div id="modalContent"></div></dialog>
   <script src="data/whiskies.js"></script>
   <script src="app.js"></script>

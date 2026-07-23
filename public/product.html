@@ -7,11 +7,41 @@
   <link rel="stylesheet" href="styles.css">
   <style>
     .product {max-width:900px;margin:40px auto;padding:24px;background:#fff;border-radius:8px}
-    .product-hero{display:flex;gap:24px}
+    .product-hero{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
     .product-image{width:320px;height:320px;background:#f3f3f3;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#999}
-    .product-meta h1{font-size:26px;margin:0 0 8px}
+    .product-meta{flex:1 1 380px;min-width:0}
+    .product-meta h1{font-size:26px;margin:0 0 8px;overflow-wrap:anywhere;word-break:break-word;}
+    .price-chart{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-top:18px}
+    .price-chart > div:first-child{flex:1 1 220px;min-width:170px}
     .price{font-weight:700;color:var(--amber);font-size:20px;margin:8px 0}
+    .radar-box{max-width:100%;width:100%;height:auto;border:1px solid #e5d4a3;border-radius:18px;padding:14px;background:#fff;box-shadow:0 10px 28px rgba(0,0,0,0.08);position:relative}
+    .radar-box canvas{width:100%;height:180px;display:block}
+    .radar-box .radar-label{display:block;margin:0 0 10px;font-size:12px;color:#5d6a5f;text-align:center}
+    .radar-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-top:12px;font-size:11px;color:#5d6a5f;text-align:center}
+    .radar-legend span{background:#f9f7f0;padding:4px 6px;border-radius:6px;display:inline-block}
     .tags span{display:inline-block;background:#f1efe9;padding:6px 8px;border-radius:6px;margin-right:8px;font-size:13px}
+    .toc{display:grid;gap:10px;background:#f7f3e7;border:1px solid #e2d7c3;border-radius:14px;padding:18px;margin:28px 0}
+    .toc strong{display:block;margin-bottom:8px;color:#6a593f;font-size:13px;letter-spacing:1px}
+    .toc a{color:#17382e;text-decoration:none;font-size:14px;display:block;padding:6px 12px;border-radius:10px;transition:background .2s}
+    .toc a:hover{background:rgba(26,56,37,.06)}
+    .product-section{margin-top:32px}
+    .product-section h2{font-size:22px;margin-bottom:16px}
+    .section-copy{font-size:15px;line-height:1.9;color:#41403c}
+    .section-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .info-card{background:#fbfaf6;border:1px solid #e6dcc7;border-radius:14px;padding:18px}
+    .info-card h3{font-size:16px;margin:0 0 10px}
+    .info-card p{margin:0;color:#4d584d}
+    .detail-table{width:100%;border-collapse:collapse;margin-top:18px}
+    .detail-table th,.detail-table td{padding:12px 14px;border:1px solid #e5e0d4;text-align:left;font-size:14px}
+    .detail-table th{background:#faf7f1;color:#5e594f;width:180px}
+    .comment-list{display:grid;gap:16px;margin-top:18px}
+    .comment-card{display:flex;gap:14px;align-items:flex-start;background:#fffdf7;border:1px solid #efe6d8;border-radius:18px;padding:16px}
+    .comment-avatar{width:42px;height:42px;border-radius:50%;background:#d8c6a2;color:#3f2c10;font-weight:700;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+    .comment-bubble{background:#fff;border:1px solid #ece3d3;border-radius:18px 18px 18px 4px;padding:14px;position:relative}
+    .comment-bubble::after{content:'';position:absolute;left:16px;bottom:-10px;width:0;height:0;border:10px solid transparent;border-top-color:#fff;border-bottom:0;margin-left:-10px}
+    .comment-bubble p{margin:0 0 8px;color:#4a4a45;line-height:1.8}
+    .comment-meta{font-size:12px;color:#7a715c}
+    @media (max-width:760px){.section-grid{grid-template-columns:1fr}.product-hero{flex-direction:column}.product-image{width:100%;height:auto;min-height:260px}.product-meta{width:100%}.radar-box canvas{height:150px}} 
     .buy-links a{display:inline-block;margin-right:10px;padding:10px 14px;border-radius:6px;text-decoration:none;background:#17382e;color:#fff}
     .back-link{display:inline-block;margin-bottom:12px;color:var(--ink);text-decoration:none}
   </style>
@@ -22,6 +52,7 @@
     <div id="productContent">
       <p>読み込み中…</p>
     </div>
+    <p class="affiliate-disclaimer">当サイトはAmazonアソシエイト・楽天アフィリエイトの参加者です。<br>リンク先で商品を購入すると、サイト運営者 に報酬が発生する場合があります。</p>
   </main>
 
   <script src="data/whiskies.js"></script>
