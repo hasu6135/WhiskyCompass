@@ -491,6 +491,34 @@ async function createAbv(item) {
   }
 }
 
+async function createCharacteristic(item) {
+  const rawName = item.rawName || item.name;
+  const caption = item.caption || item.itemCaption || '';
+  const fallback = item.characteristic || item.note || '';
+  try {
+    const prompt = `商品名: ${rawName}\n説明: ${caption || 'なし'}\n\nこのウイスキーの特徴を、日本語で120〜160文字程度でまとめてください。出力は必ずJSON形式で {"characteristic":"..."} のみを返してください。`;
+    const response = await fetch(LM_STUDIO_API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.25,
+        messages: [
+          { role: 'system', content: 'あなたは日本語のウイスキー編集者です。出力は必ずJSONのみで返してください。' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if (!response.ok) throw new Error(`LocalLM ${response.status}`);
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const parsed = safeJsonParse(content);
+    const characteristic = parsed?.characteristic || parsed?.特徴 || '';
+    return characteristic && typeof characteristic === 'string' ? characteristic.trim() : fallback;
+  } catch (error) {
+    console.warn(`createCharacteristic failed for ${rawName}: ${error.message}`);
+    return fallback;
+  }
+}
+
 async function createVolume(item) {
   const rawName = item.rawName || item.name;
   const caption = item.caption || item.itemCaption || '';
@@ -716,6 +744,7 @@ async function main() {
     item.abv = await createAbv(item) || item.abv || '';
     item.volume = await createVolume(item) || item.volume || '';
     item.style = await createStyle(item) || item.style || styleFor(item.rawName || item.name);
+    item.characteristic = await createCharacteristic(item) || item.characteristic || '';
     item.note = await createReview(item);
     item.sectionOverview = await createSectionText(item, 'このウイスキーについて', 'このウイスキーの特徴や背景、誰に向いているかを説明してください。', item.caption || item.note || 'このウイスキーの全体像を説明します。');
     item.sectionTaste = await createSectionText(item, '味わいと特徴', '香りや味わい、余韻の特徴をわかりやすく説明してください。', item.note);

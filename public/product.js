@@ -202,8 +202,7 @@
       <h2>このウイスキーについて</h2>
       <div class="section-grid">
         <div class="section-copy">
-          <p>${summary}</p>
-          <p>${intro}</p>
+          <p>${item.sectionOverview || ''}</p>
           <ul>
             <li>スタイル: ${item.style?.join(' / ') || 'ー'}</li>
             <li>容量: ${item.volume || '?ml'}</li>
@@ -211,8 +210,8 @@
           </ul>
         </div>
         <div class="info-card">
-          <h3>特徴ポイント</h3>
-          <p>${item.sectionOverview ? item.sectionOverview : 'バランスの良い香り・飲みやすさ・ギフト向けの高級感。初めてのブレンデッドにもおすすめです。'}</p>
+          <h3>特徴</h3>
+          <p>${item.characteristic || ''}</p>
         </div>
       </div>
     </section>
