@@ -118,18 +118,19 @@
     `;
   }
 
-  function buildComments(){
-    const comments = [
+  function buildComments(comments){
+    const defaultComments = [
       {name:'佐藤さん',role:'初めての方',text:'柔らかい甘さとほのかなスモーキー感がちょうどよく、初めてのブレンデッドにもぴったりでした。'},
       {name:'山本さん',role:'ハイボール派',text:'氷を入れても味がぼやけず、爽やかさがしっかり残るのでハイボールで楽しめます。'},
       {name:'中村さん',role:'ギフト検討中',text:'価格も手頃でラベルも品があるので、贈り物としても安心できる一本です。'}
     ];
-    return comments.map(c=>`
+    const list = Array.isArray(comments) && comments.length ? comments : defaultComments;
+    return list.map(c=>`
       <div class="comment-card">
-        <div class="comment-avatar">${c.name.slice(0,1)}</div>
+        <div class="comment-avatar">${String(c.name || '').slice(0,1) || 'U'}</div>
         <div class="comment-bubble">
-          <p>${c.text}</p>
-          <div class="comment-meta">${c.name}・${c.role}</div>
+          <p>${c.text || ''}</p>
+          <div class="comment-meta">${c.name || 'ユーザー'}・${c.role || 'ウイスキー好き'}</div>
         </div>
       </div>
     `).join('');
@@ -145,9 +146,13 @@
   if(!item){ container.innerHTML = '<p>該当する商品が見つかりませんでした。</p>'; return }
 
   const title = item.articleTitle || item.name;
-  const summary = item.caption || item.note || 'はじめての方にも楽しみやすい、バランタインの定番ボトルです。';
-  const intro = item.origin ? `${item.origin} をベースにした、穏やかでバランスのいい味わいが魅力です。` : 'バランスよく飲みやすいウイスキーです。';
-  const methods = getServingMethods(item);
+  const summary = item.sectionOverview || item.caption || item.note || 'はじめての方にも楽しみやすい、バランタインの定番ボトルです。';
+  const intro = item.sectionOverview || (item.origin ? `${item.origin} をベースにした、穏やかでバランスのいい味わいが魅力です。` : 'バランスよく飲みやすいウイスキーです。');
+  const taste = item.sectionTaste || `香りは${item.flavor?.join('、')}が中心で、口に含むと程よい甘さとコクが感じられます。余韻には穏やかなスモーキーさが残り、飲み疲れしにくい軽やかさも魅力です。`;
+  const methods = Array.isArray(item.sectionWays) && item.sectionWays.length ? item.sectionWays : getServingMethods(item);
+  const priceSummary = item.sectionPriceSummary || `最新の価格を参考にした相場感です。購入先によって価格やキャンペーンが変わる可能性があります。`;
+  const summaryText = item.sectionSummary || 'バランタイン ファイネストは、ほどよい甘さと香りのバランスが魅力の定番ブレンデッドです。初めての方から贈り物まで幅広く使える一本としておすすめです。';
+  const comments = Array.isArray(item.userComments) && item.userComments.length ? item.userComments : null;
 
   container.innerHTML = `
     <div class="product-hero">
@@ -192,13 +197,13 @@
           <p>${intro}</p>
           <ul>
             <li>スタイル: ${item.style?.join(' / ') || 'ー'}</li>
-            <li>容量: 700ml</li>
-            <li>アルコール度数: 40％</li>
+            <li>容量: ${item.volume || '700ml'}</li>
+            <li>アルコール度数: ${item.abv || '40％'}</li>
           </ul>
         </div>
         <div class="info-card">
           <h3>特徴ポイント</h3>
-          <p>バランスの良い香り・飲みやすさ・ギフト向けの高級感。初めてのブレンデッドにもおすすめです。</p>
+          <p>${item.sectionOverview ? 'AIが生成したこの商品の魅力を分かりやすく解説しています。' : 'バランスの良い香り・飲みやすさ・ギフト向けの高級感。初めてのブレンデッドにもおすすめです。'}</p>
         </div>
       </div>
     </section>
@@ -206,37 +211,36 @@
     <section id="taste" class="product-section">
       <h2>味わいと特徴</h2>
       <div class="section-copy">
-        <p>香りは${item.flavor?.join('、')}が中心で、口に含むと程よい甘さとコクが感じられます。余韻には穏やかなスモーキーさが残り、飲み疲れしにくい軽やかさも魅力です。</p>
+        <p>${taste}</p>
       </div>
     </section>
 
     <section id="ways" class="product-section">
       <h2>おすすめの飲み方</h2>
       <div class="section-copy">
-        <p>次の飲み方が特におすすめです。</p>
-        <ul>
-          ${methods.map(m=>`<li>${m}</li>`).join('')}
-        </ul>
+        ${Array.isArray(methods)
+          ? `<ul>${methods.map(m=>`<li>${m}</li>`).join('')}</ul>`
+          : `<p>${methods}</p>`}
       </div>
     </section>
 
     <section id="price" class="product-section">
       <h2>価格相場</h2>
-      <div class="section-copy">最新の価格を参考にした相場感です。購入先によって価格やキャンペーンが変わる可能性があります。</div>
+      <div class="section-copy">${priceSummary}</div>
       ${buildPriceTable(item)}
     </section>
 
     <section id="reviews" class="product-section">
       <h2>口コミ風コメント</h2>
       <div class="comment-list">
-        ${buildComments()}
+        ${buildComments(comments)}
       </div>
     </section>
 
     <section id="summary" class="product-section">
       <h2>まとめ</h2>
       <div class="section-copy">
-        <p>バランタイン ファイネストは、ほどよい甘さと香りのバランスが魅力の定番ブレンデッドです。初めての方から贈り物まで幅広く使える一本としておすすめです。</p>
+        <p>${summaryText}</p>
       </div>
     </section>
   `;

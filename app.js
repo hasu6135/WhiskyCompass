@@ -32,6 +32,11 @@ function required(value, name) {
   return value;
 }
 
+function formatPrice(n) {
+  if (n === null || n === undefined || Number.isNaN(Number(n))) return '―';
+  return Number(n).toLocaleString('ja-JP') + '円';
+}
+
 function cleanTitle(value = '') {
   return value.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
 }
@@ -391,7 +396,7 @@ async function createNameSummary(item) {
 
 async function createReview(item) {
   const rawName = item.rawName || item.name;
-  const fallback = `${rawName}は${item.flavor.join('・')}の印象を楽しみたい方に向く候補です。販売ページで容量・度数・価格をご確認ください。`;
+  const fallback = `${rawName}は${(item.flavor||[]).join('・') || 'バランスの良い味わい'}の印象を楽しみたい方に向く候補です。販売ページで容量・度数・価格をご確認ください。`;
   console.log(`\nGenerating LocalLM review for ${rawName}...`);
   try {
     const response = await fetch(LM_STUDIO_API_URL, {
@@ -400,7 +405,7 @@ async function createReview(item) {
         ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.35,
         messages: [
           { role: 'system', content: 'あなたは日本のウイスキー編集者です。与えられた販売情報だけを根拠に、断定・受賞歴・在庫の主張をせず、80〜120字の中立な紹介文を日本語で作成してください。HTMLは不要です。' },
-          { role: 'user', content: `商品名: ${rawName}\n商品説明: ${item.caption || 'なし'}\n価格: ${item.price}円\nレビュー平均: ${item.score}\n想定タグ: ${item.flavor.join('、')}` }
+          { role: 'user', content: `商品名: ${rawName}\n商品説明: ${item.caption || 'なし'}\n価格: ${item.price}円\nレビュー平均: ${item.score}\n想定タグ: ${(item.flavor||[]).join('、')}` }
         ]
       })
     });
@@ -409,6 +414,98 @@ async function createReview(item) {
     return String(data.choices?.[0]?.message?.content || fallback).replace(/<[^>]*>/g, '').trim().slice(0, 260);
   } catch (error) {
     console.warn(`LocalLM review skipped for ${rawName}: ${error.message}`);
+    return fallback;
+  }
+}
+
+async function createSectionText(item, sectionTitle, description, fallbackText) {
+  const rawName = item.rawName || item.name;
+  const fallback = fallbackText || `${rawName}の${sectionTitle}に関する説明です。`;
+  try {
+    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\n価格: ${item.price || ''}円\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\n「${sectionTitle}」について、${description}。日本語で120〜160文字程度で書いてください。出力は必ずJSONのみで {"text":"..."} 形式で返してください。`;
+    const response = await fetch(LM_STUDIO_API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.3,
+        messages: [
+          { role: 'system', content: 'あなたは日本のウイスキー編集者です。出力は必ずJSON形式で返してください。' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if (!response.ok) throw new Error(`LocalLM ${response.status}`);
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
+    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    return (parsed && parsed.text) ? String(parsed.text).replace(/<[^>]*>/g, '').trim() : fallback;
+  } catch (error) {
+    console.warn(`createSectionText failed for ${sectionTitle}: ${error.message}`);
+    return fallback;
+  }
+}
+
+async function createWays(item) {
+  const rawName = item.rawName || item.name;
+  const fallback = ['ストレート', 'ロック', 'ハイボール'];
+  try {
+    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーに向いているおすすめの飲み方を、3つの短い日本語の文字列で作成してください。出力は必ずJSONのみで {"ways":["...","...","..."]} 形式で返してください。`;
+    const response = await fetch(LM_STUDIO_API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.3,
+        messages: [
+          { role: 'system', content: 'あなたはウイスキーの飲み方を提案する日本語編集者です。出力は必ずJSON形式で返してください。' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if (!response.ok) throw new Error(`LocalLM ${response.status}`);
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
+    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    return Array.isArray(parsed?.ways) && parsed.ways.length ? parsed.ways.map(String).slice(0, 3) : fallback;
+  } catch (error) {
+    console.warn(`createWays failed: ${error.message}`);
+    return fallback;
+  }
+}
+
+async function createComments(item) {
+  const rawName = item.rawName || item.name;
+  const fallback = [
+    { name: '佐藤さん', role: '初めての方', text: '柔らかい甘さとほんのりスモーキーな後味がちょうどよく、初めてのブレンデッドにも向いていると思いました。' },
+    { name: '山本さん', role: 'ハイボール派', text: '氷を入れても味がしっかり残るので、ハイボールでも安定したおいしさを楽しめました。' },
+    { name: '中村さん', role: 'ギフト検討中', text: '価格も手頃でラベルが落ち着いているため、プレゼントに選びやすいボトルです。' }
+  ];
+  try {
+    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーについて、読者が参考にしたくなる口コミ風コメントを3つ作成してください。各コメントは「name」「role」「text」を持つJSONオブジェクトで表し、出力は必ずJSONのみで {"comments":[{"name":"...","role":"...","text":"..."},...]} 形式で返してください。`;
+    const response = await fetch(LM_STUDIO_API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.35,
+        messages: [
+          { role: 'system', content: 'あなたはウイスキーの口コミを考える日本語編集者です。出力は必ずJSON形式で返してください。' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if (!response.ok) throw new Error(`LocalLM ${response.status}`);
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
+    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    if (Array.isArray(parsed?.comments) && parsed.comments.length) {
+      return parsed.comments.slice(0, 3).map(c => ({
+        name: String(c.name || '').trim() || 'ユーザー',
+        role: String(c.role || '').trim() || 'ウイスキー好き',
+        text: String(c.text || '').trim() || ''
+      })).filter(c => c.text);
+    }
+    return fallback;
+  } catch (error) {
+    console.warn(`createComments failed: ${error.message}`);
     return fallback;
   }
 }
@@ -486,6 +583,12 @@ async function main() {
       continue;
     }
     item.note = await createReview(item);
+    item.sectionOverview = await createSectionText(item, 'このウイスキーについて', 'このウイスキーの特徴や背景、誰に向いているかを説明してください。', item.caption || item.note || 'このウイスキーの全体像を説明します。');
+    item.sectionTaste = await createSectionText(item, '味わいと特徴', '香りや味わい、余韻の特徴をわかりやすく説明してください。', item.note);
+    item.sectionWays = await createWays(item);
+    item.sectionPriceSummary = await createSectionText(item, '価格相場', 'このウイスキーの価格相場や購入時のポイントを説明してください。', `価格は約${formatPrice(item.price)}程度です。`);
+    item.sectionSummary = await createSectionText(item, 'まとめ', 'このウイスキーの総合的なおすすめポイントを簡潔にまとめてください。', item.note);
+    item.userComments = await createComments(item);
     const article = await createArticle(item);
     const finalTitle = article.title || candidateTitle;
     const finalTitleKey = canonicalTitle(finalTitle);
