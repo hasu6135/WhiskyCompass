@@ -622,6 +622,7 @@ async function main() {
     }
     item.note = await createReview(item);
     item.sectionOverview = await createSectionText(item, 'このウイスキーについて', 'このウイスキーの特徴や背景、誰に向いているかを説明してください。', item.caption || item.note || 'このウイスキーの全体像を説明します。');
+    item.adv = await createSectionText(item, 'このウイスキーについて', 'このウイスキーの度数を返してください。', item.note);
     item.sectionTaste = await createSectionText(item, '味わいと特徴', '香りや味わい、余韻の特徴をわかりやすく説明してください。', item.note);
     item.sectionWays = await createWays(item);
     item.sectionPriceSummary = await createSectionText(item, '価格相場', 'このウイスキーの価格相場や購入時のポイントを説明してください。', `価格は約${formatPrice(item.price)}程度です。`);
