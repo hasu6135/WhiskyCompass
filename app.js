@@ -491,6 +491,67 @@ async function createAbv(item) {
   }
 }
 
+async function createVolume(item) {
+  const rawName = item.rawName || item.name;
+  const caption = item.caption || item.itemCaption || '';
+  const fallback = item.volume || '';
+  try {
+    const prompt = `商品名: ${rawName}\n説明: ${caption || 'なし'}\n\nこの商品の容量を、必ず日本語で「700ml」「750ml」「1L」などの形式で1つだけ答えてください。出力は必ずJSON形式で {"volume":"..."} のみを返してください。`;
+    const response = await fetch(LM_STUDIO_API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.25,
+        messages: [
+          { role: 'system', content: 'あなたは日本語のウイスキー編集者です。出力は必ずJSONのみで返してください。' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if (!response.ok) throw new Error(`LocalLM ${response.status}`);
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const parsed = safeJsonParse(content);
+    const volume = parsed?.volume || parsed?.容量 || '';
+    if (volume && typeof volume === 'string') {
+      return volume.trim();
+    }
+    return fallback;
+  } catch (error) {
+    console.warn(`createVolume failed for ${rawName}: ${error.message}`);
+    return fallback;
+  }
+}
+
+async function createStyle(item) {
+  const rawName = item.rawName || item.name;
+  const caption = item.caption || item.itemCaption || '';
+  const fallback = Array.isArray(item.style) && item.style.length ? item.style : styleFor(item.rawName || item.name);
+  try {
+    const prompt = `商品名: ${rawName}\n説明: ${caption || 'なし'}\n\nこのウイスキーのスタイルを、3つ以内の日本語タグで表現してください。例: ["ジャパニーズ","ハイボール"]。出力は必ずJSON形式で {"style":["...","..."]} のみを返してください。`;
+    const response = await fetch(LM_STUDIO_API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.25,
+        messages: [
+          { role: 'system', content: 'あなたは日本語のウイスキー編集者です。出力は必ずJSONのみで返してください。' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if (!response.ok) throw new Error(`LocalLM ${response.status}`);
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const parsed = safeJsonParse(content);
+    if (Array.isArray(parsed?.style) && parsed.style.length) {
+      return parsed.style.map(String).filter(Boolean).slice(0, 3);
+    }
+    return fallback;
+  } catch (error) {
+    console.warn(`createStyle failed for ${rawName}: ${error.message}`);
+    return fallback;
+  }
+}
+
 async function createSectionText(item, sectionTitle, description, fallbackText) {
   const rawName = item.rawName || item.name;
   const fallback = fallbackText || `${rawName}の${sectionTitle}に関する説明です。`;
@@ -653,6 +714,8 @@ async function main() {
       continue;
     }
     item.abv = await createAbv(item) || item.abv || '';
+    item.volume = await createVolume(item) || item.volume || '';
+    item.style = await createStyle(item) || item.style || styleFor(item.rawName || item.name);
     item.note = await createReview(item);
     item.sectionOverview = await createSectionText(item, 'このウイスキーについて', 'このウイスキーの特徴や背景、誰に向いているかを説明してください。', item.caption || item.note || 'このウイスキーの全体像を説明します。');
     item.sectionTaste = await createSectionText(item, '味わいと特徴', '香りや味わい、余韻の特徴をわかりやすく説明してください。', item.note);

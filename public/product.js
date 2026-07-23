@@ -111,7 +111,7 @@
     const rakuten = item.rakuten ? `<a target="_blank" rel="noopener noreferrer" href="${item.rakuten}">楽天</a>` : '楽天';
     return `
       <table class="detail-table">
-        <tr><th>購入先</th><td>${amazon}</td><th>容量</th><td>${item.price? '700ml' : '―'}</td></tr>
+        <tr><th>購入先</th><td>${amazon}</td><th>容量</th><td>${item.volume || '―'}</td></tr>
         <tr><th>参考価格</th><td>${price}</td><th>配送</th><td>ショップに準ずる</td></tr>
         <tr><th>おすすめ理由</th><td colspan="3">${item.flavor && item.flavor.length ? item.flavor.join('・') + 'の味わいが魅力' : '飲みやすくて普段使いにおすすめ'}</td></tr>
       </table>
