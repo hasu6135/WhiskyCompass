@@ -459,6 +459,38 @@ async function createReview(item) {
   }
 }
 
+async function createAbv(item) {
+  const rawName = item.rawName || item.name;
+  const caption = item.caption || item.itemCaption || '';
+  const fallback = item.abv || '';
+  try {
+    const prompt = `商品名: ${rawName}\n説明: ${caption || 'なし'}\n\nこの商品に含まれるアルコール度数を、必ず日本語で「43％」の形式で1つだけ答えてください。出力は必ずJSON形式で {"abv":"..."} のみを返してください。`;
+    const response = await fetch(LM_STUDIO_API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.25,
+        messages: [
+          { role: 'system', content: 'あなたは日本語のウイスキー編集者です。出力は必ずJSONのみで返してください。' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if (!response.ok) throw new Error(`LocalLM ${response.status}`);
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const parsed = safeJsonParse(content);
+    const abv = parsed?.abv || parsed?.ABV || parsed?.度数 || '';
+    if (abv && typeof abv === 'string') {
+      const normalized = abv.trim().replace(/[^0-9\.％%]/g, '').replace(/%$/, '％');
+      if (normalized) return normalized;
+    }
+    return fallback;
+  } catch (error) {
+    console.warn(`createAbv failed for ${rawName}: ${error.message}`);
+    return fallback;
+  }
+}
+
 async function createSectionText(item, sectionTitle, description, fallbackText) {
   const rawName = item.rawName || item.name;
   const fallback = fallbackText || `${rawName}の${sectionTitle}に関する説明です。`;
@@ -620,9 +652,9 @@ async function main() {
       console.log(`Skipping duplicate article title (pre-check): ${item.rawName} -> ${candidateTitle}`);
       continue;
     }
+    item.abv = await createAbv(item) || item.abv || '';
     item.note = await createReview(item);
     item.sectionOverview = await createSectionText(item, 'このウイスキーについて', 'このウイスキーの特徴や背景、誰に向いているかを説明してください。', item.caption || item.note || 'このウイスキーの全体像を説明します。');
-    item.adv = await createSectionText(item, 'このウイスキーについて', 'このウイスキーの度数を返してください。', item.note);
     item.sectionTaste = await createSectionText(item, '味わいと特徴', '香りや味わい、余韻の特徴をわかりやすく説明してください。', item.note);
     item.sectionWays = await createWays(item);
     item.sectionPriceSummary = await createSectionText(item, '価格相場', 'このウイスキーの価格相場や購入時のポイントを説明してください。', `価格は約${formatPrice(item.price)}程度です。`);
