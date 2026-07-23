@@ -206,13 +206,13 @@
           <p>${intro}</p>
           <ul>
             <li>スタイル: ${item.style?.join(' / ') || 'ー'}</li>
-            <li>容量: ${item.volume || '700ml'}</li>
-            <li>アルコール度数: ${item.abv || '40％'}</li>
+            <li>容量: ${item.volume || '?ml'}</li>
+            <li>アルコール度数: ${item.abv || '?％'}</li>
           </ul>
         </div>
         <div class="info-card">
           <h3>特徴ポイント</h3>
-          <p>${item.sectionOverview ? 'AIが生成したこの商品の魅力を分かりやすく解説しています。' : 'バランスの良い香り・飲みやすさ・ギフト向けの高級感。初めてのブレンデッドにもおすすめです。'}</p>
+          <p>${item.sectionOverview ? item.sectionOverview : 'バランスの良い香り・飲みやすさ・ギフト向けの高級感。初めてのブレンデッドにもおすすめです。'}</p>
         </div>
       </div>
     </section>
