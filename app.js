@@ -270,13 +270,14 @@ async function rakutenSearch(sort) {
 }
 
 function isBottle(item) {
-  const title = cleanTitle(item.itemName);
-  const text = `${title} ${item.itemCaption || ''}`;
-  const whiskyName = /ウイスキー|ウィスキー|whisk(?:e)?y|スコッチ|バーボン|シングルモルト|ピュアモルト|ブレンデッド|竹鶴|山崎|白州|知多|余市|宮城峡|響|角瓶|ニッカ/i;
-  const nonWhiskyProduct = /炭酸水|ソーダ|割[り材]|ボールペン|筆記具|ジェットストリーム|スキットル|ウ[ィイ]スキーボトル|水筒|アクセサリー|ピアス|コニャッククォーツ|ハイボール.*缶|缶.*ハイボール|リキュール.*発泡/i;
+  const title = cleanTitle(item.itemName || '');
+  const caption = cleanTitle(item.itemCaption || '');
+  const text = `${title} ${caption}`;
+  const whiskyName = /ウイスキー|ウィスキー|whisk(?:e)?y|スコッチ|バーボン|シングルモルト|ピュアモルト|ブレンデッド|竹鶴|山崎|白州|知多|余市|宮城峡|響|角瓶|ニッカ|グレンフィディック|マッカラン|ラフロイグ|ボウモア|ジョニーウォーカー/i;
+  const nonWhiskyProduct = /炭酸水|ソーダ缶|ボールペン|筆記具|ジェットストリーム|スキットル|ウ[ィイ]スキーボトル|水筒|アクセサリー|ピアス|コニャッククォーツ|ハイボール.*缶|缶.*ハイボール|リキュール.*発泡/i;
   if (!whiskyName.test(title) || nonWhiskyProduct.test(text)) return false;
   // Do not use a broad "本" check here: whisky listings commonly say "700ml 1本".
-  return !/グラス|タンブラー|チョコ|ケーキ|ハイボール缶|セット.*グラス|ソーダ|文庫|単行本|書籍|漫画|くじ/i.test(text);
+  return !/グラス|タンブラー|チョコ|ケーキ|ハイボール缶|セット.*グラス|文庫|単行本|書籍|漫画|くじ/i.test(text);
 }
 
 function findImageUrl(value) {
@@ -518,7 +519,7 @@ async function createComments(item) {
     { name: '中村さん', role: 'ギフト検討中', text: '価格も手頃でラベルが落ち着いているため、プレゼントに選びやすいボトルです。' }
   ];
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーについて、読者が参考にしたくなる口コミ風コメントを3つ作成してください。各コメントは「name」「role」「text」を持つJSONオブジェクトで表し、出力は必ずJSONのみで {"comments":[{"name":"...","role":"...","text":"..."},...]} 形式で返してください。コメントの本文に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。`;
+    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーについて、読者が参考にしたくなる口コミ風コメントを3つ作成してください。各コメントは「name」「text」を持つJSONオブジェクトで表し、出力は必ずJSONのみで {"comments":[{"name":"...","text":"..."},...]} 形式で返してください。コメントの本文に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。nameはハンドルネーム風とします。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

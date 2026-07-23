@@ -118,6 +118,16 @@
     `;
   }
 
+  function normalizeHandle(value) {
+    const text = String(value || '').trim();
+    return text.replace(/[^\p{L}\p{N}_]+/gu, '');
+  }
+
+  function buildCommentHandle(comment) {
+    const namePart = normalizeHandle(comment.name || 'ユーザー').slice(0, 4);
+    return `@${namePart}`;
+  }
+
   function buildComments(comments){
     const defaultComments = [
       {name:'佐藤さん',role:'初めての方',text:'柔らかい甘さとほのかなスモーキー感がちょうどよく、初めてのブレンデッドにもぴったりでした。'},
@@ -130,7 +140,7 @@
         <div class="comment-avatar">${String(c.name || '').slice(0,1) || 'U'}</div>
         <div class="comment-bubble">
           <p>${c.text || ''}</p>
-          <div class="comment-meta">${c.name || 'ユーザー'}・${c.role || 'ウイスキー好き'}</div>
+          <div class="comment-meta">${buildCommentHandle(c)}</div>
         </div>
       </div>
     `).join('');
@@ -173,7 +183,6 @@
           <a target="_blank" rel="noopener noreferrer" href="${item.rakuten||'#'}">楽天市場で見る</a>
         </div>
         <div class="radar-box" style="margin-top:20px">
-          <div class="radar-label">味わいを6指標で見える化</div>
           <canvas id="radarCanvas" width="220" height="180"></canvas>
         </div>
       </div>
