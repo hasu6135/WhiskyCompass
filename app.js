@@ -445,14 +445,14 @@ async function createReview(item) {
       body: JSON.stringify({
         ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.35,
         messages: [
-          { role: 'system', content: 'あなたは日本のウイスキー編集者です。与えられた販売情報だけを根拠に、断定・受賞歴・在庫の主張をせず、80〜120字の中立な紹介文を日本語で作成してください。HTMLは不要です。特別に重要な単語や大事なポイントには、適宜 <b>太字</b> やハイライト（<mark>文章</mark>）を使って見やすく色付けしてください。' },
+          { role: 'system', content: 'あなたは日本のウイスキー編集者です。与えられた販売情報だけを根拠に、断定・受賞歴・在庫の主張をせず、この商品についてネットから情報を集め、400字程度の中立な紹介文を日本語で作成してください。HTMLは不要です。特別に重要な単語や大事なポイントには、適宜 <b>太字</b> やハイライト（<mark>文章</mark>）を使って見やすく色付けしてください。' },
           { role: 'user', content: `商品名: ${rawName}\n商品説明: ${item.caption || 'なし'}\n価格: ${item.price}円\nレビュー平均: ${item.score}\n想定タグ: ${(item.flavor||[]).join('、')}` }
         ]
       })
     });
     if (!response.ok) throw new Error(`LocalLM ${response.status}`);
     const data = await response.json();
-    return String(data.choices?.[0]?.message?.content || fallback).replace(/<[^>]*>/g, '').trim().slice(0, 260);
+    return String(data.choices?.[0]?.message?.content || fallback)/*.replace(/<[^>]*>/g, '')*/.trim().slice(0, 260);
   } catch (error) {
     console.warn(`LocalLM review skipped for ${rawName}: ${error.message}`);
     return fallback;
@@ -612,7 +612,7 @@ async function createSectionText(item, sectionTitle, description, fallbackText) 
   const rawName = item.rawName || item.name;
   const fallback = fallbackText || `${rawName}の${sectionTitle}に関する説明です。`;
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\n価格: ${item.price || ''}円\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\n「${sectionTitle}」について、${description}。日本語で120〜160文字程度で書いてください。出力は必ずJSONのみで {"text":"..."} 形式で返してください。特別に重要な単語や大事なポイントには、適宜 <b>太字</b> やハイライト（<mark>文章</mark>）を使って見やすく色付けしてください。`;
+    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\n価格: ${item.price || ''}円\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\n「${sectionTitle}」について、${description}。日本語で400文字程度で書いてください。出力は必ずJSONのみで {"text":"..."} 形式で返してください。特別に重要な単語や大事なポイントには、適宜 <b>太字</b> やハイライト（<mark>文章</mark>）を使って見やすく色付けしてください。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -627,7 +627,7 @@ async function createSectionText(item, sectionTitle, description, fallbackText) 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
     const parsed = safeJsonParse(content);
-    return (parsed && parsed.text) ? String(parsed.text).replace(/<[^>]*>/g, '').trim() : fallback;
+    return (parsed && parsed.text) ? String(parsed.text)/*.replace(/<[^>]*>/g, '')*/.trim() : fallback;
   } catch (error) {
     console.warn(`createSectionText failed for ${sectionTitle}: ${error.message}`);
     return fallback;
@@ -668,7 +668,7 @@ async function createComments(item) {
     { name: '中村さん', role: 'ギフト検討中', text: '価格も手頃でラベルが落ち着いているため、プレゼントに選びやすいボトルです。' }
   ];
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーについて、読者が参考にしたくなる口コミ風コメントを3つ作成してください。各コメントは「name」「text」を持つJSONオブジェクトで表し、出力は必ずJSONのみで {"comments":[{"name":"...","text":"..."},...]} 形式で返してください。コメントの本文に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。nameはハンドルネーム風とします。`;
+    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーについて、読者が参考にしたくなる口コミ風コメントを3つ作成してください。各コメントは「name」「text」を持つJSONオブジェクトで表し、出力は必ずJSONのみで {"comments":[{"name":"...","text":"..."},...]} 形式で返してください。コメントの本文に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。nameは幅広い自由なハンドルネームとします。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
