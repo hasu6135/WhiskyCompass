@@ -129,11 +129,7 @@
   }
 
   function buildComments(comments){
-    const defaultComments = [
-      {name:'佐藤さん',role:'初めての方',text:'柔らかい甘さとほのかなスモーキー感がちょうどよく、初めてのブレンデッドにもぴったりでした。'},
-      {name:'山本さん',role:'ハイボール派',text:'氷を入れても味がぼやけず、爽やかさがしっかり残るのでハイボールで楽しめます。'},
-      {name:'中村さん',role:'ギフト検討中',text:'価格も手頃でラベルも品があるので、贈り物としても安心できる一本です。'}
-    ];
+    const defaultComments = [];
     const list = Array.isArray(comments) && comments.length ? comments : defaultComments;
     return list.map(c=>`
       <div class="comment-card">

@@ -662,11 +662,7 @@ async function createWays(item) {
 
 async function createComments(item) {
   const rawName = item.rawName || item.name;
-  const fallback = [
-    { name: '佐藤さん', role: '初めての方', text: '柔らかい甘さとほんのりスモーキーな後味がちょうどよく、初めてのブレンデッドにも向いていると思いました。' },
-    { name: '山本さん', role: 'ハイボール派', text: '氷を入れても味がしっかり残るので、ハイボールでも安定したおいしさを楽しめました。' },
-    { name: '中村さん', role: 'ギフト検討中', text: '価格も手頃でラベルが落ち着いているため、プレゼントに選びやすいボトルです。' }
-  ];
+  const fallback = [];
   try {
     const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーについて、読者が参考にしたくなる口コミ風コメントを3つ作成してください。各コメントは「name」「text」を持つJSONオブジェクトで表し、出力は必ずJSONのみで {"comments":[{"name":"...","text":"..."},...]} 形式で返してください。コメントの本文に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。nameはランダムな2つの単語を組み合わせた造語とします。`;
     const response = await fetch(LM_STUDIO_API_URL, {
