@@ -124,7 +124,7 @@
   }
 
   function buildCommentHandle(comment) {
-    const namePart = normalizeHandle(comment.name || 'ユーザー').slice(0, 4);
+    const namePart = normalizeHandle(comment.name || 'ユーザー').slice(0, 10);
     return `@${namePart}`;
   }
 
