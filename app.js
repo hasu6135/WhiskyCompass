@@ -14,7 +14,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const HITS = 2;
+const HITS = 4;
 const LM_STUDIO_API_URL = 'http://localhost:1234/v1/chat/completions';
 const OUTPUT_FILE = path.resolve('public/data/whiskies.js');
 const RAKUTEN_ENDPOINT = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
@@ -445,7 +445,7 @@ async function createReview(item) {
       body: JSON.stringify({
         ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.35,
         messages: [
-          { role: 'system', content: 'あなたは日本のウイスキー編集者です。与えられた販売情報だけを根拠に、断定・受賞歴・在庫の主張をせず、80〜120字の中立な紹介文を日本語で作成してください。HTMLは不要です。' },
+          { role: 'system', content: 'あなたは日本のウイスキー編集者です。与えられた販売情報だけを根拠に、断定・受賞歴・在庫の主張をせず、80〜120字の中立な紹介文を日本語で作成してください。HTMLは不要です。特別に重要な単語や大事なポイントには、適宜 <b>太字</b> やハイライト（<mark>文章</mark>）を使って見やすく色付けしてください。' },
           { role: 'user', content: `商品名: ${rawName}\n商品説明: ${item.caption || 'なし'}\n価格: ${item.price}円\nレビュー平均: ${item.score}\n想定タグ: ${(item.flavor||[]).join('、')}` }
         ]
       })
@@ -496,7 +496,7 @@ async function createCharacteristic(item) {
   const caption = item.caption || item.itemCaption || '';
   const fallback = item.characteristic || item.note || '';
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${caption || 'なし'}\n\nこのウイスキーの特徴を、日本語で120〜160文字程度でまとめてください。出力は必ずJSON形式で {"characteristic":"..."} のみを返してください。`;
+    const prompt = `商品名: ${rawName}\n説明: ${caption || 'なし'}\n\nこのウイスキーの特徴を、日本語で120〜160文字程度でまとめてください。出力は必ずJSON形式で {"characteristic":"..."} のみを返してください。特別に重要な単語や大事なポイントには、適宜 <b>太字</b> やハイライト（<mark>文章</mark>）を使って見やすく色付けしてください。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -580,11 +580,39 @@ async function createStyle(item) {
   }
 }
 
+async function createBarrel(item) {
+  const rawName = item.rawName || item.name;
+  const caption = item.caption || item.itemCaption || '';
+  const fallback = item.barrel || '樽情報不明';
+  try {
+    const prompt = `商品名: ${rawName}\n説明: ${caption || 'なし'}\n\nこのウイスキーの樽の種類を、簡潔な日本語1つで答えてください。例: バーボン樽、シェリー樽、ピート香の樽、ブレンド。出力は必ずJSON形式で {"barrel":"..."} のみを返してください。`;
+    const response = await fetch(LM_STUDIO_API_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.25,
+        messages: [
+          { role: 'system', content: 'あなたは日本語のウイスキー編集者です。出力は必ずJSONのみで返してください。' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if (!response.ok) throw new Error(`LocalLM ${response.status}`);
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    const parsed = safeJsonParse(content);
+    const barrel = parsed?.barrel || parsed?.樽 || '';
+    return barrel && typeof barrel === 'string' ? barrel.trim() : fallback;
+  } catch (error) {
+    console.warn(`createBarrel failed for ${rawName}: ${error.message}`);
+    return fallback;
+  }
+}
+
 async function createSectionText(item, sectionTitle, description, fallbackText) {
   const rawName = item.rawName || item.name;
   const fallback = fallbackText || `${rawName}の${sectionTitle}に関する説明です。`;
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\n価格: ${item.price || ''}円\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\n「${sectionTitle}」について、${description}。日本語で120〜160文字程度で書いてください。出力は必ずJSONのみで {"text":"..."} 形式で返してください。`;
+    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\n価格: ${item.price || ''}円\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\n「${sectionTitle}」について、${description}。日本語で120〜160文字程度で書いてください。出力は必ずJSONのみで {"text":"..."} 形式で返してください。特別に重要な単語や大事なポイントには、適宜 <b>太字</b> やハイライト（<mark>文章</mark>）を使って見やすく色付けしてください。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -744,13 +772,21 @@ async function main() {
     item.abv = await createAbv(item) || item.abv || '';
     item.volume = await createVolume(item) || item.volume || '';
     item.style = await createStyle(item) || item.style || styleFor(item.rawName || item.name);
+    item.barrel = await createBarrel(item) || item.barrel || '樽情報不明';
     item.characteristic = await createCharacteristic(item) || item.characteristic || '';
     item.note = await createReview(item);
-    item.sectionOverview = await createSectionText(item, 'このウイスキーについて', 'このウイスキーの特徴や背景、誰に向いているかを説明してください。', item.caption || item.note || 'このウイスキーの全体像を説明します。');
-    item.sectionTaste = await createSectionText(item, '味わいと特徴', '香りや味わい、余韻の特徴をわかりやすく説明してください。', item.note);
+    item.sectionBasics = await createSectionText(item, '基本スペック', '原産国・度数・樽の種類・容量などの基本情報を、簡潔に整理して説明してください。', `${item.origin || '原産国不明'}・${item.abv || '?％'}・${item.volume || '?ml'}の基本スペックです。`);
+    item.sectionDistillery = await createSectionText(item, 'このウイスキーについて', '蒸留所の特徴や歴史、製法・ブランド背景をわかりやすく説明してください。', item.caption || item.note || 'このウイスキーの全体像を説明します。');
+    item.sectionTasting = await createSectionText(item, 'テイスティングレビュー', '香り・味わい・余韻を具体的にわかりやすく説明してください。', item.note);
     item.sectionWays = await createWays(item);
-    item.sectionPriceSummary = await createSectionText(item, '価格相場', 'このウイスキーの価格相場や購入時のポイントを説明してください。', `価格は約${formatPrice(item.price)}程度です。`);
+    item.sectionFood = await createSectionText(item, 'おすすめの飲み方＆相性の良いおつまみ', '飲み方の提案と相性の良いおつまみを合わせて説明してください。', 'ハイボールやロックで飲みやすさを活かし、軽いおつまみとの相性が良いです。');
+    item.sectionPrice = await createSectionText(item, '定価・価格相場と買える場所', '参考価格相場といつどこで買えるかを、購入時に役立つ形で説明してください。', `価格は約${formatPrice(item.price)}程度です。`);
+    item.sectionReviews = await createSectionText(item, '口コミ・評判', '口コミや評判の傾向を、中立的な表現でまとめてください。', item.note);
+    item.sectionAudience = await createSectionText(item, 'こんな人におすすめ', 'どんなシーンや飲み手に向いているか、類似銘柄との比較も含めて説明してください。', item.note);
     item.sectionSummary = await createSectionText(item, 'まとめ', 'このウイスキーの総合的なおすすめポイントを簡潔にまとめてください。', item.note);
+    item.sectionOverview = item.sectionDistillery;
+    item.sectionTaste = item.sectionTasting;
+    item.sectionPriceSummary = item.sectionPrice;
     item.userComments = await createComments(item);
     const article = await createArticle(item);
     const finalTitle = article.title || candidateTitle;

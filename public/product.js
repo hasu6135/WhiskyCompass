@@ -156,13 +156,17 @@
   if(!item){ container.innerHTML = '<p>該当する商品が見つかりませんでした。</p>'; return }
 
   const title = item.articleTitle || item.name;
-  const summary = item.sectionOverview || item.caption || item.note || 'はじめての方にも楽しみやすい、バランタインの定番ボトルです。';
-  const intro = item.sectionOverview || (item.origin ? `${item.origin} をベースにした、穏やかでバランスのいい味わいが魅力です。` : 'バランスよく飲みやすいウイスキーです。');
-  const taste = item.sectionTaste || `香りは${item.flavor?.join('、')}が中心で、口に含むと程よい甘さとコクが感じられます。余韻には穏やかなスモーキーさが残り、飲み疲れしにくい軽やかさも魅力です。`;
+  const basicsText = item.sectionBasics || `${item.origin || '原産国不明'}のウイスキーで、${item.abv || '?％'}・${item.volume || '?ml'}の基本スペックが整理されています。`;
+  const distilleryText = item.sectionDistillery || item.sectionOverview || (item.origin ? `${item.origin} をベースにした、穏やかでバランスのいい味わいが魅力です。` : 'バランスよく飲みやすいウイスキーです。');
+  const tastingText = item.sectionTasting || item.sectionTaste || `香りは${item.flavor?.join('、')}が中心で、口に含むと程よい甘さとコクが感じられます。余韻には穏やかなスモーキーさが残り、飲み疲れしにくい軽やかさも魅力です。`;
   const methods = Array.isArray(item.sectionWays) && item.sectionWays.length ? item.sectionWays : getServingMethods(item);
-  const priceSummary = item.sectionPriceSummary || `最新の価格を参考にした相場感です。購入先によって価格やキャンペーンが変わる可能性があります。`;
+  const servingText = item.sectionFood || '飲みやすさを活かしたハイボールやロックに加え、程よい甘みの食材との相性が良いです。';
+  const priceText = item.sectionPrice || item.sectionPriceSummary || `最新の価格を参考にした相場感です。購入先によって価格やキャンペーンが変わる可能性があります。`;
+  const reviewsText = item.sectionReviews || '定番の口コミ評価は、香りや飲みやすさに好意的な声が中心でした。';
+  const audienceText = item.sectionAudience || 'まずは飲みやすい一本を探している方や、幅広いシーンで使える定番ボトルを探している方におすすめです。';
   const summaryText = item.sectionSummary || 'バランタイン ファイネストは、ほどよい甘さと香りのバランスが魅力の定番ブレンデッドです。初めての方から贈り物まで幅広く使える一本としておすすめです。';
   const comments = Array.isArray(item.userComments) && item.userComments.length ? item.userComments : null;
+  const styleText = Array.isArray(item.style) && item.style.length ? item.style.join(' / ') : 'ー';
 
   container.innerHTML = `
     <div class="product-hero">
@@ -190,42 +194,57 @@
 
     <nav class="toc">
       <strong>目次</strong>
+      ${createSectionAnchor('基本スペック', 'basics')}
       ${createSectionAnchor('このウイスキーについて', 'overview')}
-      ${createSectionAnchor('味わいと特徴', 'taste')}
-      ${createSectionAnchor('おすすめの飲み方', 'ways')}
-      ${createSectionAnchor('価格相場', 'price')}
-      ${createSectionAnchor('口コミ', 'reviews')}
+      ${createSectionAnchor('テイスティングレビュー', 'taste')}
+      ${createSectionAnchor('おすすめの飲み方＆相性の良いおつまみ', 'ways')}
+      ${createSectionAnchor('定価・価格相場と買える場所', 'price')}
+      ${createSectionAnchor('口コミ・評判', 'reviews')}
+      ${createSectionAnchor('こんな人におすすめ', 'audience')}
       ${createSectionAnchor('まとめ', 'summary')}
     </nav>
+
+    <section id="basics" class="product-section">
+      <h2>基本スペック</h2>
+      <div class="section-copy">
+        <p>${basicsText}</p>
+      </div>
+      <table class="detail-table">
+        <tr><th>原産国</th><td>${item.origin || '原産国不明'}</td><th>度数</th><td>${item.abv || '―'}</td></tr>
+        <tr><th>容量</th><td>${item.volume || '―'}</td><th>樽の種類</th><td>${item.barrel || '―'}</td></tr>
+        <tr><th>スタイル</th><td>${styleText}</td><th>販売元</th><td>${item.shopName || '―'}</td></tr>
+      </table>
+    </section>
 
     <section id="overview" class="product-section">
       <h2>このウイスキーについて</h2>
       <div class="section-grid">
         <div class="section-copy">
-          <p>${item.sectionOverview || ''}</p>
+          <p>${distilleryText}</p>
           <ul>
-            <li>スタイル: ${item.style?.join(' / ') || 'ー'}</li>
+            <li>スタイル: ${styleText}</li>
             <li>容量: ${item.volume || '?ml'}</li>
             <li>アルコール度数: ${item.abv || '?％'}</li>
           </ul>
         </div>
         <div class="info-card">
           <h3>特徴</h3>
-          <p>${item.characteristic || ''}</p>
+          <p>${item.characteristic || 'バランスの良い味わいで、幅広い場面で楽しみやすい一本です。'}</p>
         </div>
       </div>
     </section>
 
     <section id="taste" class="product-section">
-      <h2>味わいと特徴</h2>
+      <h2>テイスティングレビュー</h2>
       <div class="section-copy">
-        <p>${taste}</p>
+        <p>${tastingText}</p>
       </div>
     </section>
 
     <section id="ways" class="product-section">
-      <h2>おすすめの飲み方</h2>
+      <h2>おすすめの飲み方＆相性の良いおつまみ</h2>
       <div class="section-copy">
+        <p>${servingText}</p>
         ${Array.isArray(methods)
           ? `<ul>${methods.map(m=>`<li>${m}</li>`).join('')}</ul>`
           : `<p>${methods}</p>`}
@@ -233,15 +252,25 @@
     </section>
 
     <section id="price" class="product-section">
-      <h2>価格相場</h2>
-      <div class="section-copy">${priceSummary}</div>
+      <h2>定価・価格相場と買える場所</h2>
+      <div class="section-copy">${priceText}</div>
       ${buildPriceTable(item)}
     </section>
 
     <section id="reviews" class="product-section">
-      <h2>口コミ風コメント</h2>
+      <h2>口コミ・評判</h2>
+      <div class="section-copy">
+        <p>${reviewsText}</p>
+      </div>
       <div class="comment-list">
         ${buildComments(comments)}
+      </div>
+    </section>
+
+    <section id="audience" class="product-section">
+      <h2>こんな人におすすめ</h2>
+      <div class="section-copy">
+        <p>${audienceText}</p>
       </div>
     </section>
 
