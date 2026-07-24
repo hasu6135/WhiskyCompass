@@ -452,7 +452,7 @@ async function createReview(item) {
     });
     if (!response.ok) throw new Error(`LocalLM ${response.status}`);
     const data = await response.json();
-    return String(data.choices?.[0]?.message?.content || fallback).replace(/\*/g, '').replace('\n', '<br>').trim().slice(0, 260);
+    return String(data.choices?.[0]?.message?.content || fallback).replace(/\*/g, '').replace(/\\n/g, '<br>').trim().slice(0, 260);
   } catch (error) {
     console.warn(`LocalLM review skipped for ${rawName}: ${error.message}`);
     return fallback;
@@ -775,7 +775,7 @@ async function main() {
     item.barrel = await createBarrel(item) || item.barrel || '樽情報不明';
     item.characteristic = await createCharacteristic(item) || item.characteristic || '';
     item.note = await createReview(item);
-    item.sectionBasics = await createSectionText(item, '基本スペック', '原産国・度数・樽の種類・容量などの基本情報を、簡潔に整理して説明してください。', `${item.origin || '原産国不明'}・${item.abv || '?％'}・${item.volume || '?ml'}の基本スペックです。`);
+    item.sectionBasics = await createSectionText(item, '基本スペック', '原産国・度数・樽の種類・容量を除いた基本情報を、簡潔に整理して説明してください。', `${item.origin || '原産国不明'}・${item.abv || '?％'}・${item.volume || '?ml'}の基本スペックです。`);
     item.sectionDistillery = await createSectionText(item, 'このウイスキーについて', '蒸留所の特徴や歴史、製法・ブランド背景をわかりやすく説明してください。', item.caption || item.note || 'このウイスキーの全体像を説明します。');
     item.sectionTasting = await createSectionText(item, 'テイスティングレビュー', '香り・味わい・余韻を具体的にわかりやすく説明してください。', item.note);
     item.sectionWays = await createWays(item);
