@@ -14,7 +14,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const HITS = 2;
+const HITS = 3;
 const LM_STUDIO_API_URL = 'http://localhost:1234/v1/chat/completions';
 const OUTPUT_FILE = path.resolve('public/data/whiskies.js');
 const RAKUTEN_ENDPOINT = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
@@ -452,7 +452,7 @@ async function createReview(item) {
     });
     if (!response.ok) throw new Error(`LocalLM ${response.status}`);
     const data = await response.json();
-    return String(data.choices?.[0]?.message?.content || fallback).replace(/\*/g, '').replace(/\\n/g, '<br>').trim().slice(0, 260);
+    return String(data.choices?.[0]?.message?.content || fallback).replace(/\*/g, '').replace(/\n/g, '<br>').trim().slice(0, 260);
   } catch (error) {
     console.warn(`LocalLM review skipped for ${rawName}: ${error.message}`);
     return fallback;
@@ -627,7 +627,7 @@ async function createSectionText(item, sectionTitle, description, fallbackText) 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
     const parsed = safeJsonParse(content);
-    return (parsed && parsed.text) ? String(parsed.text).replace(/\*/g, '').replace('\n', '<br>').trim() : fallback;
+    return (parsed && parsed.text) ? String(parsed.text).replace(/\*/g, '').replace(/\n/g, '<br>').trim() : fallback;
   } catch (error) {
     console.warn(`createSectionText failed for ${sectionTitle}: ${error.message}`);
     return fallback;
