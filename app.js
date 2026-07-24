@@ -14,7 +14,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const HITS = 4;
+const HITS = 2;
 const LM_STUDIO_API_URL = 'http://localhost:1234/v1/chat/completions';
 const OUTPUT_FILE = path.resolve('public/data/whiskies.js');
 const RAKUTEN_ENDPOINT = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
@@ -452,7 +452,7 @@ async function createReview(item) {
     });
     if (!response.ok) throw new Error(`LocalLM ${response.status}`);
     const data = await response.json();
-    return String(data.choices?.[0]?.message?.content || fallback)/*.replace(/<[^>]*>/g, '')*/.trim().slice(0, 260);
+    return String(data.choices?.[0]?.message?.content || fallback).replace(/\*/g, '').replace('\n', '<br>').trim().slice(0, 260);
   } catch (error) {
     console.warn(`LocalLM review skipped for ${rawName}: ${error.message}`);
     return fallback;
@@ -627,7 +627,7 @@ async function createSectionText(item, sectionTitle, description, fallbackText) 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
     const parsed = safeJsonParse(content);
-    return (parsed && parsed.text) ? String(parsed.text)/*.replace(/<[^>]*>/g, '')*/.trim() : fallback;
+    return (parsed && parsed.text) ? String(parsed.text).replace(/\*/g, '').replace('\n', '<br>').trim() : fallback;
   } catch (error) {
     console.warn(`createSectionText failed for ${sectionTitle}: ${error.message}`);
     return fallback;
@@ -668,7 +668,7 @@ async function createComments(item) {
     { name: '中村さん', role: 'ギフト検討中', text: '価格も手頃でラベルが落ち着いているため、プレゼントに選びやすいボトルです。' }
   ];
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーについて、読者が参考にしたくなる口コミ風コメントを3つ作成してください。各コメントは「name」「text」を持つJSONオブジェクトで表し、出力は必ずJSONのみで {"comments":[{"name":"...","text":"..."},...]} 形式で返してください。コメントの本文に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。nameは幅広い自由なハンドルネームとします。`;
+    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーについて、読者が参考にしたくなる口コミ風コメントを3つ作成してください。各コメントは「name」「text」を持つJSONオブジェクトで表し、出力は必ずJSONのみで {"comments":[{"name":"...","text":"..."},...]} 形式で返してください。コメントの本文に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。nameはお酒に関係ない幅広いハンドルネームとします。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
