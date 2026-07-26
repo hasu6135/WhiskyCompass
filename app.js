@@ -399,7 +399,7 @@ async function createArticle(item) {
   const rawName = item.rawName || item.name;
   const fallbackBody = item.note || `${rawName} はおすすめのウイスキーです。詳細は販売ページでご確認ください。`;
   try {
-    const prompt = `商品情報:\n名前: ${rawName}\n価格: ${item.price || ''}\n説明: ${item.caption || ''}\nタグ: ${(item.flavor||[]).join('、')}\n\n出力形式: JSON で {"title":"...","body":"..."} のみを返してください。タイトルは「ウイスキー名 銘柄名 熟成年数 容量」の形式を優先して短く、本文は120〜300文字の日本語で説明を書くこと。`;
+    const prompt = `商品情報:\n名前: ${rawName}\n価格: ${item.price || ''}\n説明: ${item.caption || ''}\nタグ: ${(item.flavor||[]).join('、')}\n\n出力形式: JSON で {"title":"...","body":"..."} のみを返してください。タイトルは「ブランド名 製法分類 熟成年数 容量」の形式を優先して短く、本文は120〜300文字の日本語で説明を書くこと。`;
     const res = await fetch(LM_STUDIO_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: 'system', content: 'あなたは日本語の編集者です。出力は必ずJSONのみで返してください。' }, { role: 'user', content: prompt }], temperature: 0.4 }) });
     if (!res.ok) throw new Error(`LocalLM ${res.status}`);
     const data = await res.json();
@@ -421,7 +421,7 @@ async function createNameSummary(item) {
   const rawName = item.rawName || item.name;
   const fallback = rawName;
   try {
-    const prompt = `商品情報:\n名前: ${rawName}\n価格: ${item.price || ''}\n説明: ${item.caption || ''}\nタグ: ${(item.flavor||[]).join('、')}\n\n出力形式: JSON で {"name":"..."} のみを返してください。このウイスキーを一言で表現する文言を、20〜40文字の日本語で作成してください。`;
+    const prompt = `ウイスキー情報：${item.articleTitle}\n\n出力形式: JSON で {"name":"..."} のみを返してください。このウイスキーを一言で表現する文言を、20〜40文字の日本語で作成してください。`;
     const res = await fetch(LM_STUDIO_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: 'system', content: 'あなたは日本語のコピーライターです。出力は必ずJSONのみで返してください。' }, { role: 'user', content: prompt }], temperature: 0.4 }) });
     if (!res.ok) throw new Error(`LocalLM ${res.status}`);
     const data = await res.json();
@@ -464,7 +464,7 @@ async function createAbv(item) {
   const caption = item.caption || item.itemCaption || '';
   const fallback = item.abv || '';
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${caption || 'なし'}\n\nこの商品に含まれるアルコール度数を、必ず日本語で「43％」の形式で1つだけ答えてください。出力は必ずJSON形式で {"abv":"..."} のみを返してください。`;
+    const prompt = `ウイスキー情報：${item.articleTitle}\n\nこの商品に含まれるアルコール度数を、必ず日本語で「43％」の形式で1つだけ答えてください。出力は必ずJSON形式で {"abv":"..."} のみを返してください。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -496,7 +496,7 @@ async function createCharacteristic(item) {
   const caption = item.caption || item.itemCaption || '';
   const fallback = item.characteristic || item.note || '';
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${caption || 'なし'}\n\nこのウイスキーの特徴を、日本語で120〜160文字程度でまとめてください。出力は必ずJSON形式で {"characteristic":"..."} のみを返してください。特別に重要な単語や大事なポイントには、適宜 <b>太字</b> やハイライト（<mark>文章</mark>）を使って見やすく色付けしてください。`;
+    const prompt = `ウイスキー情報：${item.articleTitle}\n\nこのウイスキーの特徴を、日本語で120〜160文字程度でまとめてください。出力は必ずJSON形式で {"characteristic":"..."} のみを返してください。特別に重要な単語や大事なポイントには、適宜 <b>太字</b> やハイライト（<mark>文章</mark>）を使って見やすく色付けしてください。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -524,7 +524,7 @@ async function createVolume(item) {
   const caption = item.caption || item.itemCaption || '';
   const fallback = item.volume || '';
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${caption || 'なし'}\n\nこの商品の容量を、必ず日本語で「700ml」「750ml」「1L」などの形式で1つだけ答えてください。出力は必ずJSON形式で {"volume":"..."} のみを返してください。`;
+    const prompt = `ウイスキー情報：${item.articleTitle}\n\nこの商品の容量を、必ず日本語で「700ml」「750ml」「1L」などの形式で1つだけ答えてください。出力は必ずJSON形式で {"volume":"..."} のみを返してください。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -555,7 +555,7 @@ async function createStyle(item) {
   const caption = item.caption || item.itemCaption || '';
   const fallback = Array.isArray(item.style) && item.style.length ? item.style : styleFor(item.rawName || item.name);
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${caption || 'なし'}\n\nこのウイスキーのスタイルを、3つ以内の日本語タグで表現してください。例: ["ジャパニーズ","ハイボール"]。出力は必ずJSON形式で {"style":["...","..."]} のみを返してください。`;
+    const prompt = `ウイスキー情報：${item.articleTitle}\n\nこのウイスキーのスタイルを、3つ以内の日本語タグで表現してください。例: ["ジャパニーズ","ハイボール"]。出力は必ずJSON形式で {"style":["...","..."]} のみを返してください。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -585,7 +585,7 @@ async function createBarrel(item) {
   const caption = item.caption || item.itemCaption || '';
   const fallback = item.barrel || '樽情報不明';
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${caption || 'なし'}\n\nこのウイスキーの樽の種類を、簡潔な日本語1つで答えてください。例: バーボン樽、シェリー樽、ピート香の樽、ブレンド。出力は必ずJSON形式で {"barrel":"..."} のみを返してください。`;
+    const prompt = `ウイスキー情報：${item.articleTitle}\n\nこのウイスキーの樽の種類を、簡潔な日本語1つで答えてください。例: バーボン樽、シェリー樽、ピート香の樽、ブレンド。出力は必ずJSON形式で {"barrel":"..."} のみを返してください。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -612,7 +612,7 @@ async function createSectionText(item, sectionTitle, description, fallbackText) 
   const rawName = item.rawName || item.name;
   const fallback = fallbackText || `${rawName}の${sectionTitle}に関する説明です。`;
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\n価格: ${item.price || ''}円\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\n「${sectionTitle}」について、${description}。日本語で400文字程度で書いてください。出力は必ずJSONのみで {"text":"..."} 形式で返してください。特別に重要な単語や大事なポイントには、適宜 <b>太字</b> やハイライト（<mark>文章</mark>）を使って見やすく色付けしてください。`;
+    const prompt = `ウイスキー情報：${item.articleTitle}\n\n「${sectionTitle}」について、${description}。日本語で400文字程度で書いてください。出力は必ずJSONのみで {"text":"..."} 形式で返してください。特別に重要な単語や大事なポイントには、適宜 <b>太字</b> やハイライト（<mark>文章</mark>）を使って見やすく色付けしてください。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -638,7 +638,7 @@ async function createWays(item) {
   const rawName = item.rawName || item.name;
   const fallback = ['ストレート', 'ロック', 'ハイボール'];
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーに向いているおすすめの飲み方を、3つの短い日本語の文字列で作成してください。出力は必ずJSONのみで {"ways":["...","...","..."]} 形式で返してください。文字列の中に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。`;
+    const prompt = `ウイスキー情報：${item.articleTitle}\n\nこのウイスキーに向いているおすすめの飲み方を、3つの短い日本語の文字列で作成してください。出力は必ずJSONのみで {"ways":["...","...","..."]} 形式で返してください。文字列の中に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -664,7 +664,7 @@ async function createComments(item) {
   const rawName = item.rawName || item.name;
   const fallback = [];
   try {
-    const prompt = `商品名: ${rawName}\n説明: ${item.caption || item.note || 'なし'}\nタグ: ${(item.flavor||[]).join('、')}\nスタイル: ${(item.style||[]).join('、')}\n\nこのウイスキーについて、読者が参考にしたくなる口コミ風コメントを3つ作成してください。各コメントは「name」「text」を持つJSONオブジェクトで表し、出力は必ずJSONのみで {"comments":[{"name":"...","text":"..."},...]} 形式で返してください。コメントの本文に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。nameはランダムな2つの単語を組み合わせた造語とします。`;
+    const prompt = `ウイスキー情報：${item.articleTitle}\n\nこのウイスキーについて、読者が参考にしたくなる口コミ風コメントを3つ作成してください。各コメントは「name」「text」を持つJSONオブジェクトで表し、出力は必ずJSONのみで {"comments":[{"name":"...","text":"..."},...]} 形式で返してください。コメントの本文に二重引用符や改行を含めず、値はシンプルな日本語で書いてください。nameはランダムな2つの単語を組み合わせた造語とします。`;
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -756,10 +756,13 @@ async function main() {
 
   const newProducts = [];
   for (const item of products) {
+    const article = await createArticle(item);
+    item.articleTitle = article.title;
+
     const summaryName = await createNameSummary(item);
     item.name = summaryName;
 
-    const candidateTitle = formatArticleTitle(item);
+    const candidateTitle = item.articleTitle;
     const titleKey = canonicalTitle(candidateTitle);
     if (existingTitles.has(titleKey) || newTitles.has(titleKey)) {
       console.log(`Skipping duplicate article title (pre-check): ${item.rawName} -> ${candidateTitle}`);
@@ -784,14 +787,13 @@ async function main() {
     item.sectionTaste = item.sectionTasting;
     item.sectionPriceSummary = item.sectionPrice;
     item.userComments = await createComments(item);
-    const article = await createArticle(item);
-    const finalTitle = article.title || candidateTitle;
+    const finalTitle = item.articleTitle;
     const finalTitleKey = canonicalTitle(finalTitle);
     if (existingTitles.has(finalTitleKey) || newTitles.has(finalTitleKey)) {
       console.log(`Skipping duplicate article title (post-AI): ${item.rawName} -> ${finalTitle}`);
       continue;
     }
-    item.articleTitle = finalTitle;
+    
     item.articleBody = article.body;
     const englishTitle = await translateTitleToEnglish(item.articleTitle || item.name);
     item.slug = slugify(englishTitle || item.articleTitle || item.name);
