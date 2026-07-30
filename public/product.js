@@ -1,27 +1,8 @@
 // product.js: render product detail based on ?id=...
 (function(){
   function q(selector){return document.querySelector(selector)}
-  //function getId(){const p=new URLSearchParams(location.search);const q = p.get('id'); if(q) return q; // fallback to path-based slug
-    //const parts = location.pathname.split('/').filter(Boolean); const last = parts[parts.length-1] || ''; return last || null; }
-function getId() {
-  // 1. クエリパラメータ ?id=... があれば優先
-  const p = new URLSearchParams(location.search);
-  const q = p.get('id');
-  if (q) return q;
-
-  // 2. パス名 (/products/yamazaki-12-year-50ml) から最後のセグメントを取得
-  const parts = location.pathname.split('/').filter(Boolean);
-  const last = parts[parts.length - 1] || '';
-
-  // product.html 自体を指している場合や空の場合は null を返す
-  if (!last || last === 'product.html' || last === 'product') {
-    return null;
-  }
-
-  // URLエンコードされた文字列（日本語等）をデコードして返す
-  return decodeURIComponent(last);
-}
-
+  function getId(){const p=new URLSearchParams(location.search);const q = p.get('id'); if(q) return q; // fallback to path-based slug
+    const parts = location.pathname.split('/').filter(Boolean); const last = parts[parts.length-1] || ''; return last || null; }
   function formatPrice(n){if(!n && n!==0) return ''; return n.toLocaleString() + '円'}
 
   function radarMetrics(item){
@@ -299,16 +280,9 @@ function getId() {
   const radarCanvas = q('#radarCanvas');
   if (radarCanvas) drawRadarChart(radarCanvas, radarMetrics(item));
   // Push a pretty URL without reloading, e.g. /products/<slug>
-// Push a pretty URL without reloading, e.g. /products/<slug>
-  try {
+  try{
     const slug = item.slug || item.id;
     const pretty = `/products/${encodeURIComponent(slug)}`;
-
-    // 現在のパスが期待する pretty URL と異なる場合のみ replaceState を実行する
-    if (location.pathname !== pretty && history && history.replaceState) {
-      history.replaceState({}, '', pretty);
-    }
-  } catch (e) {
-    /* ignore */
-  }
+    if (history && history.replaceState) history.replaceState({}, '', pretty);
+  }catch(e){/* ignore */}
 })();
