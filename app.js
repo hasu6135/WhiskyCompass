@@ -700,9 +700,27 @@ function generateHtmlForProduct(item) {
     .map(tag => `<span>${tag}</span>`)
     .join('');
 
-  // 星評価の生成
+  // 星評価の判定
   const scoreNum = parseFloat(item.score) || 0;
   const starsHtml = '★'.repeat(Math.round(scoreNum)) + '☆'.repeat(5 - Math.round(scoreNum));
+
+  // 口コミ（コメント）のHTML生成
+  const commentsHtml = (item.userComments || []).map(comment => {
+    const avatarChar = (comment.name || 'ゆ')[0];
+    return `
+      <div class="comment-card">
+        <div class="comment-avatar">${avatarChar}</div>
+        <div class="comment-bubble">
+          <p>${comment.text || ''}</p>
+          <div class="comment-meta">@${comment.name || 'ユーザー'}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // 飲み方のリストHTML生成
+  const waysHtml = (item.sectionWays || [])
+    .map(way => `<li>${way}</li>`)
+    .join('');
 
   return `<!DOCTYPE html>
 <html lang="ja">
@@ -719,14 +737,14 @@ function generateHtmlForProduct(item) {
     .product-image img{width:100%;height:100%;object-fit:contain}
     .product-meta{flex:1 1 380px;min-width:0}
     .product-meta h1{font-size:26px;margin:0 0 8px;overflow-wrap:anywhere;word-break:break-word;}
+    .product-subtitle{font-size:14px;color:#666;margin:0 0 8px;}
+    .origin{font-size:13px;color:#7a715c;margin-bottom:8px;}
+    .rating{margin-bottom:12px;}
     .price-chart{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-top:18px}
     .price-chart > div:first-child{flex:1 1 220px;min-width:170px}
     .price{font-weight:700;color:var(--amber, #d97706);font-size:20px;margin:8px 0}
     .radar-box{max-width:100%;width:100%;height:auto;border:1px solid #e5d4a3;border-radius:18px;padding:14px;background:#fff;box-shadow:0 10px 28px rgba(0,0,0,0.08);position:relative}
     .radar-box canvas{width:100%;height:180px;display:block}
-    .radar-box .radar-label{display:block;margin:0 0 10px;font-size:12px;color:#5d6a5f;text-align:center}
-    .radar-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-top:12px;font-size:11px;color:#5d6a5f;text-align:center}
-    .radar-legend span{background:#f9f7f0;padding:4px 6px;border-radius:6px;display:inline-block}
     .tags span{display:inline-block;background:#f1efe9;padding:6px 8px;border-radius:6px;margin-right:8px;font-size:13px}
     .toc{display:grid;gap:10px;background:#f7f3e7;border:1px solid #e2d7c3;border-radius:14px;padding:18px;margin:28px 0}
     .toc strong{display:block;margin-bottom:8px;color:#6a593f;font-size:13px;letter-spacing:1px}
@@ -746,67 +764,159 @@ function generateHtmlForProduct(item) {
     .comment-card{display:flex;gap:14px;align-items:flex-start;background:#fffdf7;border:1px solid #efe6d8;border-radius:18px;padding:16px}
     .comment-avatar{width:42px;height:42px;border-radius:50%;background:#d8c6a2;color:#3f2c10;font-weight:700;display:grid;place-items:center;font-size:16px;flex-shrink:0}
     .comment-bubble{background:#fff;border:1px solid #ece3d3;border-radius:18px 18px 18px 4px;padding:14px;position:relative}
-    .comment-bubble::after{content:'';position:absolute;left:16px;bottom:-10px;width:0;height:0;border:10px solid transparent;border-top-color:#fff;border-bottom:0;margin-left:-10px}
     .comment-bubble p{margin:0 0 8px;color:#4a4a45;line-height:1.8}
     .comment-meta{font-size:12px;color:#7a715c}
     @media (max-width:760px){.section-grid{grid-template-columns:1fr}.product-hero{flex-direction:column}.product-image{width:100%;height:auto;min-height:260px}.product-meta{width:100%}.radar-box canvas{height:150px}} 
     .buy-links a{display:inline-block;margin-right:10px;padding:10px 14px;border-radius:6px;text-decoration:none;background:#17382e;color:#fff}
     .back-link{display:inline-block;margin-bottom:12px;color:var(--ink, #333);text-decoration:none}
+    .affiliate-disclaimer{font-size:12px;color:#888;margin-top:40px;text-align:center;line-height:1.6;}
   </style>
 </head>
 <body>
-  <div class="product">
-    <a href="/" class="back-link">← 戻る</a>
-
-    <div class="product-hero">
-      <div class="product-image">
-        <img src="${item.image || '/assets/no-image.png'}" alt="${title}">
-      </div>
-
-      <div class="product-meta">
-        <h1>${title}</h1>
-        <p class="section-copy" style="margin: 0 0 12px;">${item.characteristic || item.note || ''}</p>
-        <p style="font-size: 13px; color: #7a715c; margin: 0 0 8px;">${item.origin || ''}</p>
-        
-        <div>
-          <span style="color: #d97706;">${starsHtml}</span>
-          <span style="font-weight: bold; margin-left: 4px;">${item.score || '0.0'}</span>
+  <main class="product">
+    <a class="back-link" href="/">← 戻る</a>
+    
+    <div id="productContent">
+      <div class="product-hero">
+        <div class="product-image">
+          <img src="${item.image || '/assets/no-image.png'}" alt="${title}">
         </div>
-
-        <div class="price-chart">
-          <div>
-            <div class="price">${priceText}</div>
-            <div class="tags" style="margin-top: 12px;">
-              ${tagsHtml}
+        
+        <div class="product-meta">
+          <h1>${title}</h1>
+          <p class="product-subtitle">${item.name || ''}</p>
+          <div class="origin">${item.origin || '原産国不明'}</div>
+          <div class="rating"><span style="color:#d97706">${starsHtml}</span> <b>${item.score || '0.0'}</b></div>
+          
+          <div class="price-chart">
+            <div>
+              <div class="price">${priceText}</div>
+              <div class="tags">${tagsHtml}</div>
             </div>
-            <div class="buy-links" style="margin-top: 16px;">
-              ${item.amazon ? `<a href="${item.amazon}" target="_blank" rel="noopener">Amazonで見る</a>` : ''}
-              ${item.rakuten ? `<a href="${item.rakuten}" target="_blank" rel="noopener">楽天市場で見る</a>` : ''}
-            </div>
+          </div>
+          
+          <div style="margin-top:14px" class="buy-links">
+            ${item.amazon ? `<a target="_blank" rel="noopener noreferrer" href="${item.amazon}">Amazonで見る</a>` : ''}
+            ${item.rakuten ? `<a target="_blank" rel="noopener noreferrer" href="${item.rakuten}">楽天市場で見る</a>` : ''}
+          </div>
+          
+          <div class="radar-box" style="margin-top:20px">
+            <canvas id="radarCanvas" width="718" height="270"></canvas>
           </div>
         </div>
       </div>
+
+      <!-- 目次 -->
+      <nav class="toc">
+        <strong>目次</strong>
+        <a href="#basics">基本スペック</a>
+        <a href="#overview">このウイスキーについて</a>
+        <a href="#taste">テイスティングレビュー</a>
+        <a href="#ways">おすすめの飲み方＆相性の良いおつまみ</a>
+        <a href="#price">定価・価格相場と買える場所</a>
+        <a href="#reviews">口コミ・評判</a>
+        <a href="#audience">こんな人におすすめ</a>
+        <a href="#summary">まとめ</a>
+      </nav>
+
+      <!-- 1. 基本スペック -->
+      <section id="basics" class="product-section">
+        <h2>基本スペック</h2>
+        <div class="section-copy">
+          <p>${item.sectionBasics || ''}</p>
+        </div>
+        <table class="detail-table">
+          <tbody>
+            <tr><th>原産国</th><td>${item.origin || '不明'}</td><th>度数</th><td>${item.abv || '不明'}</td></tr>
+            <tr><th>容量</th><td>${item.volume || '不明'}</td><th>樽の種類</th><td>${item.barrel || '不明'}</td></tr>
+            <tr><th>スタイル</th><td>${(item.style || []).join(' / ')}</td><th>販売元</th><td>${item.shopName || '不明'}</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 2. このウイスキーについて -->
+      <section id="overview" class="product-section">
+        <h2>このウイスキーについて</h2>
+        <div class="section-grid">
+          <div class="section-copy">
+            <p>${item.sectionOverview || item.sectionDistillery || ''}</p>
+            <ul>
+              <li>スタイル: ${(item.style || []).join(' / ')}</li>
+              <li>容量: ${item.volume || '不明'}</li>
+              <li>アルコール度数: ${item.abv || '不明'}</li>
+            </ul>
+          </div>
+          <div class="info-card">
+            <h3>特徴</h3>
+            <p>${item.characteristic || item.note || ''}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. テイスティングレビュー -->
+      <section id="taste" class="product-section">
+        <h2>テイスティングレビュー</h2>
+        <div class="section-copy">
+          <p>${item.sectionTasting || item.sectionTaste || ''}</p>
+        </div>
+      </section>
+
+      <!-- 4. おすすめの飲み方＆相性の良いおつまみ -->
+      <section id="ways" class="product-section">
+        <h2>おすすめの飲み方＆相性の良いおつまみ</h2>
+        <div class="section-copy">
+          <p>${item.sectionFood || ''}</p>
+          ${waysHtml ? `<ul>${waysHtml}</ul>` : ''}
+        </div>
+      </section>
+
+      <!-- 5. 定価・価格相場と買える場所 -->
+      <section id="price" class="product-section">
+        <h2>定価・価格相場と買える場所</h2>
+        <div class="section-copy">${item.sectionPrice || ''}</div>
+        <table class="detail-table">
+          <tbody>
+            <tr><th>購入先</th><td>${item.rakuten ? `<a target="_blank" rel="noopener noreferrer" href="${item.rakuten}">楽天市場</a>` : 'ECサイト'}</td><th>容量</th><td>${item.volume || '不明'}</td></tr>
+            <tr><th>参考価格</th><td>${priceText}</td><th>配送</th><td>ショップに準ずる</td></tr>
+            <tr><th>おすすめ理由</th><td colspan="3">${item.label || item.name}</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 6. 口コミ・評判 -->
+      <section id="reviews" class="product-section">
+        <h2>口コミ・評判</h2>
+        <div class="section-copy">
+          <p>${item.sectionReviews || ''}</p>
+        </div>
+        <div class="comment-list">
+          ${commentsHtml}
+        </div>
+      </section>
+
+      <!-- 7. こんな人におすすめ -->
+      <section id="audience" class="product-section">
+        <h2>こんな人におすすめ</h2>
+        <div class="section-copy">
+          <p>${item.sectionAudience || ''}</p>
+        </div>
+      </section>
+
+      <!-- 8. まとめ -->
+      <section id="summary" class="product-section">
+        <h2>まとめ</h2>
+        <div class="section-copy">
+          <p>${item.sectionSummary || ''}</p>
+        </div>
+      </section>
     </div>
 
-    <!-- スペック詳細テーブル -->
-    <div class="product-section">
-      <h2>基本スペック</h2>
-      <table class="detail-table">
-        <tr><th>原産国 / ブランド</th><td>${item.origin || '不明'}</td></tr>
-        <tr><th>度数</th><td>${item.abv || '不明'}</td></tr>
-        <tr><th>容量</th><td>${item.volume || '不明'}</td></tr>
-        <tr><th>樽</th><td>${item.barrel || '不明'}</td></tr>
-      </table>
-    </div>
+    <p class="affiliate-disclaimer">当サイトはAmazonアソシエイト・楽天アフィリエイトの参加者です。<br>リンク先で商品を購入すると、サイト運営者に報酬が発生する場合があります。</p>
+  </main>
 
-    <!-- 特徴・レビューセクション -->
-    ${item.sectionTasting ? `
-      <div class="product-section">
-        <h2>テイスティング</h2>
-        <p class="section-copy">${item.sectionTasting}</p>
-      </div>
-    ` : ''}
-  </div>
+  <!-- JSの読み込み（パスをルート相対パスに変更） -->
+  <script src="/data/whiskies.js"></script>
+  <script src="/product.js"></script>
 </body>
 </html>`;
 }
