@@ -695,6 +695,11 @@ function generateHtmlForProduct(item) {
   const title = item.articleTitle || item.name || 'ウイスキー詳細';
   const priceText = formatPrice(item.price);
   
+  // タグ（flavor）の生成
+  const tagsHtml = (item.flavor || [])
+    .map(tag => `<span class="tag">${tag}</span>`)
+    .join('');
+
   return `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -702,55 +707,66 @@ function generateHtmlForProduct(item) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} - WhiskyCompass</title>
   <meta name="description" content="${item.characteristic || item.name + 'のレビューと詳細情報'}">
-  <!-- 【最重要】CSSやファビコンはルートからの絶対パスに指定 -->
+  <!-- ルート絶対パスで指定 -->
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <header>
-    <a href="/"><img src="/logo.png" alt="WhiskyCompass" class="site-logo"></a>
-  </header>
+  <!-- JS動的描画と同一のコンテナ構造 -->
+  <div id="app">
+    <div class="product-detail-page">
+      <a href="/" class="back-link">← 戻る</a>
 
-  <main class="container">
-    <article class="product-detail">
-      <h1>${title}</h1>
-      <p class="subtitle">${item.name || ''}</p>
-      
-      <div class="product-image">
-        <img src="${item.image || '/assets/no-image.png'}" alt="${title}">
+      <div class="product-main">
+        <div class="product-image-container">
+          <img src="${item.image || '/assets/no-image.png'}" alt="${title}" class="product-image">
+        </div>
+
+        <div class="product-info">
+          <h1 class="product-title">${title}</h1>
+          <p class="product-subtitle">${item.name || ''}</p>
+          <p class="product-origin">${item.origin || ''}</p>
+
+          <div class="product-rating">
+            <span class="stars">★★★★★</span>
+            <span class="score">${item.score || '0.0'}</span>
+          </div>
+
+          <div class="product-price">${priceText}</div>
+
+          <div class="product-tags">
+            ${tagsHtml}
+          </div>
+
+          <div class="affiliate-buttons">
+            ${item.amazon ? `<a href="${item.amazon}" target="_blank" rel="noopener" class="btn btn-amazon">Amazonで見を見る</a>` : ''}
+            ${item.rakuten ? `<a href="${item.rakuten}" target="_blank" rel="noopener" class="btn btn-rakuten">楽天市場で見を見る</a>` : ''}
+          </div>
+
+          <!-- レーダーチャート領域（JSで動的に描画される場合は枠を用意） -->
+          <div class="chart-container" id="radar-chart">
+            <!-- レーダーチャートのDOM構造 -->
+          </div>
+        </div>
       </div>
 
-      <div class="product-meta">
-        <p><strong>原産国/ブランド:</strong> ${item.origin || '不明'}</p>
-        <p><strong>度数:</strong> ${item.abv || '不明'}</p>
-        <p><strong>容量:</strong> ${item.volume || '不明'}</p>
-        <p><strong>参考価格:</strong> ${priceText}</p>
+      <div class="product-sections">
+        <section class="section">
+          <h2>特徴</h2>
+          <p>${item.characteristic || item.note || ''}</p>
+        </section>
+        
+        <section class="section">
+          <h2>基本スペック</h2>
+          <p>${item.sectionBasics || ''}</p>
+        </section>
+
+        <section class="section">
+          <h2>テイスティング</h2>
+          <p>${item.sectionTasting || ''}</p>
+        </section>
       </div>
-
-      <section class="section">
-        <h2>特徴</h2>
-        <p>${item.characteristic || item.note || ''}</p>
-      </section>
-
-      <section class="section">
-        <h2>基本スペック</h2>
-        <p>${item.sectionBasics || ''}</p>
-      </section>
-
-      <section class="section">
-        <h2>テイスティング</h2>
-        <p>${item.sectionTasting || ''}</p>
-      </section>
-
-      <div class="affiliate-links">
-        ${item.rakuten ? `<a href="${item.rakuten}" target="_blank" rel="noopener" class="btn rakuten">楽天市場で探す</a>` : ''}
-        ${item.amazon ? `<a href="${item.amazon}" target="_blank" rel="noopener" class="btn amazon">Amazonで探す</a>` : ''}
-      </div>
-    </article>
-  </main>
-
-  <footer>
-    <p>&copy; WhiskyCompass</p>
-  </footer>
+    </div>
+  </div>
 </body>
 </html>`;
 }
