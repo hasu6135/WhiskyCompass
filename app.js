@@ -693,9 +693,17 @@ async function translateTitleToEnglish(title) {
 
 function generateHtmlForProduct(item) {
   const title = item.articleTitle || item.name || 'ウイスキー詳細';
-  
-  // トップページ(index.html)のHTML構造をベースにしつつ、
-  // リロード時に対象の商品データを即座に読み込めるように script タグで埋め込みます
+  const priceText = formatPrice(item.price);
+
+  // タグの生成
+  const tagsHtml = (item.flavor || [])
+    .map(tag => `<span class="tag">${tag}</span>`)
+    .join('');
+
+  // 評価（星）の判定
+  const scoreNum = parseFloat(item.score) || 0;
+  const starsHtml = '★'.repeat(Math.round(scoreNum)) + '☆'.repeat(5 - Math.round(scoreNum));
+
   return `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -703,21 +711,71 @@ function generateHtmlForProduct(item) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} - WhiskyCompass</title>
   <meta name="description" content="${item.characteristic || item.name + 'のレビューと詳細情報'}">
-  <!-- ルート絶対パスでCSSとデータを読み込み -->
+  
+  <!-- ルート絶対パスでCSSを読み込み -->
   <link rel="stylesheet" href="/styles.css">
-  <script src="/data/whiskies.js"></script>
 </head>
 <body>
-  <!-- アプリのルート要素 -->
-  <div id="app"></div>
+  <div id="app">
+    <div class="container">
+      
+      <!-- 戻るボタン -->
+      <a href="/" class="back-link">← 戻る</a>
 
-  <!-- リロードされた直後に、この商品の詳細画面を開かせるための初期化スクリプト -->
-  <script>
-    window.__INITIAL_SLUG__ = ${JSON.stringify(item.slug || item.id)};
-  </script>
-  
-  <!-- メインのフロントエンドJS（パスはご自身の環境のファイル名に合わせて調整してください） -->
-  <script type="module" src="/main.js"></script>
+      <!-- メインのカード部分 -->
+      <div class="product-detail-card">
+        
+        <!-- 左側：画像 -->
+        <div class="product-detail-image">
+          <img src="${item.image || '/assets/no-image.png'}" alt="${title}">
+        </div>
+
+        <!-- 右側：詳細情報 -->
+        <div class="product-detail-content">
+          <h1 class="product-detail-title">${title}</h1>
+          <p class="product-detail-description">${item.characteristic || item.note || ''}</p>
+          
+          <p class="product-detail-origin">${item.origin || ''}</p>
+          
+          <div class="product-detail-rating">
+            <span class="stars">${starsHtml}</span>
+            <span class="score">${item.score || '0.0'}</span>
+          </div>
+
+          <div class="product-detail-price">${priceText}</div>
+
+          <div class="product-detail-tags">
+            ${tagsHtml}
+          </div>
+
+          <!-- ボタンエリア -->
+          <div class="product-detail-actions">
+            ${item.amazon ? `<a href="${item.amazon}" target="_blank" rel="noopener" class="btn btn-amazon">Amazonで見る</a>` : ''}
+            ${item.rakuten ? `<a href="${item.rakuten}" target="_blank" rel="noopener" class="btn btn-rakuten">楽天市場で見る</a>` : ''}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 下部：セクション記事エリア -->
+      <div class="product-detail-sections">
+        ${item.sectionBasics ? `
+          <section class="detail-section">
+            <h2>基本スペック</h2>
+            <p>${item.sectionBasics}</p>
+          </section>
+        ` : ''}
+
+        ${item.sectionTasting ? `
+          <section class="detail-section">
+            <h2>テイスティング</h2>
+            <p>${item.sectionTasting}</p>
+          </section>
+        ` : ''}
+      </div>
+
+    </div>
+  </div>
 </body>
 </html>`;
 }
