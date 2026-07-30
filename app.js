@@ -695,86 +695,117 @@ function generateHtmlForProduct(item) {
   const title = item.articleTitle || item.name || 'ウイスキー詳細';
   const priceText = formatPrice(item.price);
 
-  // タグの生成
+  // タグのHTML生成
   const tagsHtml = (item.flavor || [])
-    .map(tag => `<span class="tag">${tag}</span>`)
+    .map(tag => `<span>${tag}</span>`)
     .join('');
 
-  // 評価（星）の判定
+  // 星評価の生成
   const scoreNum = parseFloat(item.score) || 0;
   const starsHtml = '★'.repeat(Math.round(scoreNum)) + '☆'.repeat(5 - Math.round(scoreNum));
 
   return `<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${title} - WhiskyCompass</title>
   <meta name="description" content="${item.characteristic || item.name + 'のレビューと詳細情報'}">
-  
-  <!-- ルート絶対パスでCSSを読み込み -->
   <link rel="stylesheet" href="/styles.css">
+  <style>
+    .product {max-width:900px;margin:40px auto;padding:24px;background:#fff;border-radius:8px}
+    .product-hero{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+    .product-image{width:320px;height:320px;background:#f3f3f3;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#999;overflow:hidden}
+    .product-image img{width:100%;height:100%;object-fit:contain}
+    .product-meta{flex:1 1 380px;min-width:0}
+    .product-meta h1{font-size:26px;margin:0 0 8px;overflow-wrap:anywhere;word-break:break-word;}
+    .price-chart{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-top:18px}
+    .price-chart > div:first-child{flex:1 1 220px;min-width:170px}
+    .price{font-weight:700;color:var(--amber, #d97706);font-size:20px;margin:8px 0}
+    .radar-box{max-width:100%;width:100%;height:auto;border:1px solid #e5d4a3;border-radius:18px;padding:14px;background:#fff;box-shadow:0 10px 28px rgba(0,0,0,0.08);position:relative}
+    .radar-box canvas{width:100%;height:180px;display:block}
+    .radar-box .radar-label{display:block;margin:0 0 10px;font-size:12px;color:#5d6a5f;text-align:center}
+    .radar-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-top:12px;font-size:11px;color:#5d6a5f;text-align:center}
+    .radar-legend span{background:#f9f7f0;padding:4px 6px;border-radius:6px;display:inline-block}
+    .tags span{display:inline-block;background:#f1efe9;padding:6px 8px;border-radius:6px;margin-right:8px;font-size:13px}
+    .toc{display:grid;gap:10px;background:#f7f3e7;border:1px solid #e2d7c3;border-radius:14px;padding:18px;margin:28px 0}
+    .toc strong{display:block;margin-bottom:8px;color:#6a593f;font-size:13px;letter-spacing:1px}
+    .toc a{color:#17382e;text-decoration:none;font-size:14px;display:block;padding:6px 12px;border-radius:10px;transition:background .2s}
+    .toc a:hover{background:rgba(26,56,37,.06)}
+    .product-section{margin-top:32px}
+    .product-section h2{font-size:22px;margin-bottom:16px}
+    .section-copy{font-size:15px;line-height:1.9;color:#41403c}
+    .section-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .info-card{background:#fbfaf6;border:1px solid #e6dcc7;border-radius:14px;padding:18px}
+    .info-card h3{font-size:16px;margin:0 0 10px}
+    .info-card p{margin:0;color:#4d584d}
+    .detail-table{width:100%;border-collapse:collapse;margin-top:18px}
+    .detail-table th,.detail-table td{padding:12px 14px;border:1px solid #e5e0d4;text-align:left;font-size:14px}
+    .detail-table th{background:#faf7f1;color:#5e594f;width:180px}
+    .comment-list{display:grid;gap:16px;margin-top:18px}
+    .comment-card{display:flex;gap:14px;align-items:flex-start;background:#fffdf7;border:1px solid #efe6d8;border-radius:18px;padding:16px}
+    .comment-avatar{width:42px;height:42px;border-radius:50%;background:#d8c6a2;color:#3f2c10;font-weight:700;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+    .comment-bubble{background:#fff;border:1px solid #ece3d3;border-radius:18px 18px 18px 4px;padding:14px;position:relative}
+    .comment-bubble::after{content:'';position:absolute;left:16px;bottom:-10px;width:0;height:0;border:10px solid transparent;border-top-color:#fff;border-bottom:0;margin-left:-10px}
+    .comment-bubble p{margin:0 0 8px;color:#4a4a45;line-height:1.8}
+    .comment-meta{font-size:12px;color:#7a715c}
+    @media (max-width:760px){.section-grid{grid-template-columns:1fr}.product-hero{flex-direction:column}.product-image{width:100%;height:auto;min-height:260px}.product-meta{width:100%}.radar-box canvas{height:150px}} 
+    .buy-links a{display:inline-block;margin-right:10px;padding:10px 14px;border-radius:6px;text-decoration:none;background:#17382e;color:#fff}
+    .back-link{display:inline-block;margin-bottom:12px;color:var(--ink, #333);text-decoration:none}
+  </style>
 </head>
 <body>
-  <div id="app">
-    <div class="container">
-      
-      <!-- 戻るボタン -->
-      <a href="/" class="back-link">← 戻る</a>
+  <div class="product">
+    <a href="/" class="back-link">← 戻る</a>
 
-      <!-- メインのカード部分 -->
-      <div class="product-detail-card">
+    <div class="product-hero">
+      <div class="product-image">
+        <img src="${item.image || '/assets/no-image.png'}" alt="${title}">
+      </div>
+
+      <div class="product-meta">
+        <h1>${title}</h1>
+        <p class="section-copy" style="margin: 0 0 12px;">${item.characteristic || item.note || ''}</p>
+        <p style="font-size: 13px; color: #7a715c; margin: 0 0 8px;">${item.origin || ''}</p>
         
-        <!-- 左側：画像 -->
-        <div class="product-detail-image">
-          <img src="${item.image || '/assets/no-image.png'}" alt="${title}">
+        <div>
+          <span style="color: #d97706;">${starsHtml}</span>
+          <span style="font-weight: bold; margin-left: 4px;">${item.score || '0.0'}</span>
         </div>
 
-        <!-- 右側：詳細情報 -->
-        <div class="product-detail-content">
-          <h1 class="product-detail-title">${title}</h1>
-          <p class="product-detail-description">${item.characteristic || item.note || ''}</p>
-          
-          <p class="product-detail-origin">${item.origin || ''}</p>
-          
-          <div class="product-detail-rating">
-            <span class="stars">${starsHtml}</span>
-            <span class="score">${item.score || '0.0'}</span>
-          </div>
-
-          <div class="product-detail-price">${priceText}</div>
-
-          <div class="product-detail-tags">
-            ${tagsHtml}
-          </div>
-
-          <!-- ボタンエリア -->
-          <div class="product-detail-actions">
-            ${item.amazon ? `<a href="${item.amazon}" target="_blank" rel="noopener" class="btn btn-amazon">Amazonで見る</a>` : ''}
-            ${item.rakuten ? `<a href="${item.rakuten}" target="_blank" rel="noopener" class="btn btn-rakuten">楽天市場で見る</a>` : ''}
+        <div class="price-chart">
+          <div>
+            <div class="price">${priceText}</div>
+            <div class="tags" style="margin-top: 12px;">
+              ${tagsHtml}
+            </div>
+            <div class="buy-links" style="margin-top: 16px;">
+              ${item.amazon ? `<a href="${item.amazon}" target="_blank" rel="noopener">Amazonで見る</a>` : ''}
+              ${item.rakuten ? `<a href="${item.rakuten}" target="_blank" rel="noopener">楽天市場で見る</a>` : ''}
+            </div>
           </div>
         </div>
-
       </div>
-
-      <!-- 下部：セクション記事エリア -->
-      <div class="product-detail-sections">
-        ${item.sectionBasics ? `
-          <section class="detail-section">
-            <h2>基本スペック</h2>
-            <p>${item.sectionBasics}</p>
-          </section>
-        ` : ''}
-
-        ${item.sectionTasting ? `
-          <section class="detail-section">
-            <h2>テイスティング</h2>
-            <p>${item.sectionTasting}</p>
-          </section>
-        ` : ''}
-      </div>
-
     </div>
+
+    <!-- スペック詳細テーブル -->
+    <div class="product-section">
+      <h2>基本スペック</h2>
+      <table class="detail-table">
+        <tr><th>原産国 / ブランド</th><td>${item.origin || '不明'}</td></tr>
+        <tr><th>度数</th><td>${item.abv || '不明'}</td></tr>
+        <tr><th>容量</th><td>${item.volume || '不明'}</td></tr>
+        <tr><th>樽</th><td>${item.barrel || '不明'}</td></tr>
+      </table>
+    </div>
+
+    <!-- 特徴・レビューセクション -->
+    ${item.sectionTasting ? `
+      <div class="product-section">
+        <h2>テイスティング</h2>
+        <p class="section-copy">${item.sectionTasting}</p>
+      </div>
+    ` : ''}
   </div>
 </body>
 </html>`;
