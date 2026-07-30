@@ -5,54 +5,65 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>響 シングルモルト 700ml - WhiskyCompass</title>
   <meta name="description" content="<mark>響</mark>は<b>三木樽熟成</b>を採用し、複数のモルトウイスキーをブレンドした独自のスタイルで知られる。<b>柑橘系の香り</b>と<b>スパイシーな味わい</b>が特徴。">
-  <!-- 【最重要】CSSやファビコンはルートからの絶対パスに指定 -->
+  <!-- ルート絶対パスで指定 -->
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <header>
-    <a href="/"><img src="/logo.png" alt="WhiskyCompass" class="site-logo"></a>
-  </header>
+  <!-- JS動的描画と同一のコンテナ構造 -->
+  <div id="app">
+    <div class="product-detail-page">
+      <a href="/" class="back-link">← 戻る</a>
 
-  <main class="container">
-    <article class="product-detail">
-      <h1>響 シングルモルト 700ml</h1>
-      <p class="subtitle">繊細なバランスと豊かな風味が特徴のプレミアムウイスキー</p>
-      
-      <div class="product-image">
-        <img src="https://thumbnail.image.rakuten.co.jp/@0_mall/lcs-live/cabinet/living/09818817/10120928/4901777447554.jpg?_ex=512x512" alt="響 シングルモルト 700ml">
+      <div class="product-main">
+        <div class="product-image-container">
+          <img src="https://thumbnail.image.rakuten.co.jp/@0_mall/lcs-live/cabinet/living/09818817/10120928/4901777447554.jpg?_ex=512x512" alt="響 シングルモルト 700ml" class="product-image">
+        </div>
+
+        <div class="product-info">
+          <h1 class="product-title">響 シングルモルト 700ml</h1>
+          <p class="product-subtitle">繊細なバランスと豊かな風味が特徴のプレミアムウイスキー</p>
+          <p class="product-origin">日本産 / サントリー</p>
+
+          <div class="product-rating">
+            <span class="stars">★★★★★</span>
+            <span class="score">0.0</span>
+          </div>
+
+          <div class="product-price">24,800円</div>
+
+          <div class="product-tags">
+            <span class="tag">華やか</span><span class="tag">フルーティー</span>
+          </div>
+
+          <div class="affiliate-buttons">
+            <a href="https://www.amazon.co.jp/s?k=%E9%9F%BF%20%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%A2%E3%83%AB%E3%83%88%20700ml&tag=pikumin6135-22" target="_blank" rel="noopener" class="btn btn-amazon">Amazonで見を見る</a>
+            <a href="https://hb.afl.rakuten.co.jp/hgc/g00r1fdn.udpccb09.g00r1fdn.udpcdd13/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Flcs-live%2F10021115%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Flcs-live%2Fi%2F10021013%2F&rafcid=wsc_i_is_8c84178e-0bf6-4f6a-a82d-b462e495a16e" target="_blank" rel="noopener" class="btn btn-rakuten">楽天市場で見を見る</a>
+          </div>
+
+          <!-- レーダーチャート領域（JSで動的に描画される場合は枠を用意） -->
+          <div class="chart-container" id="radar-chart">
+            <!-- レーダーチャートのDOM構造 -->
+          </div>
+        </div>
       </div>
 
-      <div class="product-meta">
-        <p><strong>原産国/ブランド:</strong> 日本産 / サントリー</p>
-        <p><strong>度数:</strong> 43％</p>
-        <p><strong>容量:</strong> 700ml</p>
-        <p><strong>参考価格:</strong> 24,800円</p>
+      <div class="product-sections">
+        <section class="section">
+          <h2>特徴</h2>
+          <p><mark>響</mark>は<b>三木樽熟成</b>を採用し、複数のモルトウイスキーをブレンドした独自のスタイルで知られる。<b>柑橘系の香り</b>と<b>スパイシーな味わい</b>が特徴。</p>
+        </section>
+        
+        <section class="section">
+          <h2>基本スペック</h2>
+          <p><mark>響</mark>は<b>サントリー</b>が生産する日本を代表するシングルモルトウイスキーです。複数の蒸留所で造られたモルトウイスキーをブレンドし、独自の製法と熟成技術によって、芳醇な香りと豊かな味わいを実現しています。その特徴的な丸みのあるボトルデザインは、日本の伝統美術からインスピレーションを得ており、贈答用としても人気があります。</p>
+        </section>
+
+        <section class="section">
+          <h2>テイスティング</h2>
+          <p>響のシングルモルトウイスキーは、複雑で調和の取れた味わいが特徴です。<mark>香り</mark>は、熟した果実や蜂蜜、そしてわずかなスパイスの香りが鼻をくすぐります。口に含むと、<b>味わい</b>は柔らかで滑らかな舌触りと共に、柑橘系のフルーツや甘いチョコレートの風味が広がります。そして、後味には軽いスモーキーなニュアンスが感じられ、<mark>余韻</mark>は長く続きます。</p>
+        </section>
       </div>
-
-      <section class="section">
-        <h2>特徴</h2>
-        <p><mark>響</mark>は<b>三木樽熟成</b>を採用し、複数のモルトウイスキーをブレンドした独自のスタイルで知られる。<b>柑橘系の香り</b>と<b>スパイシーな味わい</b>が特徴。</p>
-      </section>
-
-      <section class="section">
-        <h2>基本スペック</h2>
-        <p><mark>響</mark>は<b>サントリー</b>が生産する日本を代表するシングルモルトウイスキーです。複数の蒸留所で造られたモルトウイスキーをブレンドし、独自の製法と熟成技術によって、芳醇な香りと豊かな味わいを実現しています。その特徴的な丸みのあるボトルデザインは、日本の伝統美術からインスピレーションを得ており、贈答用としても人気があります。</p>
-      </section>
-
-      <section class="section">
-        <h2>テイスティング</h2>
-        <p>響のシングルモルトウイスキーは、複雑で調和の取れた味わいが特徴です。<mark>香り</mark>は、熟した果実や蜂蜜、そしてわずかなスパイスの香りが鼻をくすぐります。口に含むと、<b>味わい</b>は柔らかで滑らかな舌触りと共に、柑橘系のフルーツや甘いチョコレートの風味が広がります。そして、後味には軽いスモーキーなニュアンスが感じられ、<mark>余韻</mark>は長く続きます。</p>
-      </section>
-
-      <div class="affiliate-links">
-        <a href="https://hb.afl.rakuten.co.jp/hgc/g00r1fdn.udpccb09.g00r1fdn.udpcdd13/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Flcs-live%2F10021115%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Flcs-live%2Fi%2F10021013%2F&rafcid=wsc_i_is_8c84178e-0bf6-4f6a-a82d-b462e495a16e" target="_blank" rel="noopener" class="btn rakuten">楽天市場で探す</a>
-        <a href="https://www.amazon.co.jp/s?k=%E9%9F%BF%20%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%A2%E3%83%AB%E3%83%88%20700ml&tag=pikumin6135-22" target="_blank" rel="noopener" class="btn amazon">Amazonで探す</a>
-      </div>
-    </article>
-  </main>
-
-  <footer>
-    <p>&copy; WhiskyCompass</p>
-  </footer>
+    </div>
+  </div>
 </body>
 </html>

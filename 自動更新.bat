@@ -41,6 +41,7 @@ if errorlevel 1 (
     echo.
     echo ❌ node app.js の実行中にエラーが発生しました。 | powershell -Command "$Input | Tee-Object -FilePath '%LOG_FILE%' -Append"
     echo LM Studioが起動しているか確認してください。     | powershell -Command "$Input | Tee-Object -FilePath '%LOG_FILE%' -Append"
+    goto ERROR_END
 )
 
 echo. | powershell -Command "$Input | Tee-Object -FilePath '%LOG_FILE%' -Append"
