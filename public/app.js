@@ -1,5 +1,20 @@
 const LM_STUDIO_API_URL = 'http://localhost:1234/v1/chat/completions';
 
+// ページ読み込み時の処理
+document.addEventListener('DOMContentLoaded', () => {
+  // F5リロードなどで埋め込まれた slug があれば、直接その詳細画面を描画する
+  if (window.__INITIAL_SLUG__) {
+    const product = window.WHISKY_DATA.find(p => p.slug === window.__INITIAL_SLUG__);
+    if (product) {
+      renderProductDetail(product); // 既存の詳細画面描画関数を呼び出す
+      return;
+    }
+  }
+
+  // なければ通常のトップページ（一覧）を描画
+  renderProductList();
+});
+
 const fallbackWhiskies = [
   {name:'山崎 シングルモルト', origin:'JAPANESE / 京都', score:'4.4', price:6900, flavor:['フルーティー','華やか','リッチ'], style:['ジャパニーズ'], note:'熟した苺やさくらんぼを思わせる華やかさ。やわらかな甘みと、端正な樽香が続く定番の一本。', label:'YAMAZAKI', amazon:'https://www.amazon.co.jp/s?k=%E5%B1%B1%E5%B4%8E+%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%A2%E3%83%AB%E3%83%88&tag=yourtag-22', rakuten:'https://search.rakuten.co.jp/search/mall/%E5%B1%B1%E5%B4%8E%20%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%A2%E3%83%AB%E3%83%88/'},
   {name:'白州 シングルモルト', origin:'JAPANESE / 山梨', score:'4.3', price:6800, flavor:['フルーティー','スモーキー','華やか'], style:['ジャパニーズ','ハイボール'], note:'森の若葉、青りんご、ほのかな煙。清々しい個性はハイボールでも輪郭を失いません。', label:'HAKUSHU', amazon:'https://www.amazon.co.jp/s?k=%E7%99%BD%E5%B7%9E+%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%A2%E3%83%AB%E3%83%88&tag=yourtag-22', rakuten:'https://search.rakuten.co.jp/search/mall/%E7%99%BD%E5%B7%9E%20%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%A2%E3%83%AB%E3%83%88/'},

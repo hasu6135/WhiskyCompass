@@ -693,13 +693,9 @@ async function translateTitleToEnglish(title) {
 
 function generateHtmlForProduct(item) {
   const title = item.articleTitle || item.name || 'ウイスキー詳細';
-  const priceText = formatPrice(item.price);
   
-  // タグ（flavor）の生成
-  const tagsHtml = (item.flavor || [])
-    .map(tag => `<span class="tag">${tag}</span>`)
-    .join('');
-
+  // トップページ(index.html)のHTML構造をベースにしつつ、
+  // リロード時に対象の商品データを即座に読み込めるように script タグで埋め込みます
   return `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -707,66 +703,21 @@ function generateHtmlForProduct(item) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} - WhiskyCompass</title>
   <meta name="description" content="${item.characteristic || item.name + 'のレビューと詳細情報'}">
-  <!-- ルート絶対パスで指定 -->
+  <!-- ルート絶対パスでCSSとデータを読み込み -->
   <link rel="stylesheet" href="/styles.css">
+  <script src="/data/whiskies.js"></script>
 </head>
 <body>
-  <!-- JS動的描画と同一のコンテナ構造 -->
-  <div id="app">
-    <div class="product-detail-page">
-      <a href="/" class="back-link">← 戻る</a>
+  <!-- アプリのルート要素 -->
+  <div id="app"></div>
 
-      <div class="product-main">
-        <div class="product-image-container">
-          <img src="${item.image || '/assets/no-image.png'}" alt="${title}" class="product-image">
-        </div>
-
-        <div class="product-info">
-          <h1 class="product-title">${title}</h1>
-          <p class="product-subtitle">${item.name || ''}</p>
-          <p class="product-origin">${item.origin || ''}</p>
-
-          <div class="product-rating">
-            <span class="stars">★★★★★</span>
-            <span class="score">${item.score || '0.0'}</span>
-          </div>
-
-          <div class="product-price">${priceText}</div>
-
-          <div class="product-tags">
-            ${tagsHtml}
-          </div>
-
-          <div class="affiliate-buttons">
-            ${item.amazon ? `<a href="${item.amazon}" target="_blank" rel="noopener" class="btn btn-amazon">Amazonで見を見る</a>` : ''}
-            ${item.rakuten ? `<a href="${item.rakuten}" target="_blank" rel="noopener" class="btn btn-rakuten">楽天市場で見を見る</a>` : ''}
-          </div>
-
-          <!-- レーダーチャート領域（JSで動的に描画される場合は枠を用意） -->
-          <div class="chart-container" id="radar-chart">
-            <!-- レーダーチャートのDOM構造 -->
-          </div>
-        </div>
-      </div>
-
-      <div class="product-sections">
-        <section class="section">
-          <h2>特徴</h2>
-          <p>${item.characteristic || item.note || ''}</p>
-        </section>
-        
-        <section class="section">
-          <h2>基本スペック</h2>
-          <p>${item.sectionBasics || ''}</p>
-        </section>
-
-        <section class="section">
-          <h2>テイスティング</h2>
-          <p>${item.sectionTasting || ''}</p>
-        </section>
-      </div>
-    </div>
-  </div>
+  <!-- リロードされた直後に、この商品の詳細画面を開かせるための初期化スクリプト -->
+  <script>
+    window.__INITIAL_SLUG__ = ${JSON.stringify(item.slug || item.id)};
+  </script>
+  
+  <!-- メインのフロントエンドJS（パスはご自身の環境のファイル名に合わせて調整してください） -->
+  <script type="module" src="/main.js"></script>
 </body>
 </html>`;
 }
