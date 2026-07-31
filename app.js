@@ -11,7 +11,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const HITS = 30;
+const HITS = 3;
 const LM_STUDIO_API_URL = 'http://localhost:1234/v1/chat/completions';
 const OUTPUT_FILE = path.resolve('public/data/whiskies.js');
 const PRODUCTS_DIR = path.resolve('public/products'); // HTML出力先
@@ -486,7 +486,7 @@ async function createNameSummary(item) {
 async function createReview(item) {
   const rawName = item.rawName || item.name;
   const fallback = `${rawName}は${(item.flavor||[]).join('・') || 'バランスの良い味わい'}の印象を楽しみたい方に向く候補です。販売ページで容量・度数・価格をご確認ください。`;
-  console.log(`\nGenerating LocalLM review for ${rawName}...`);
+  console.log(`\nGenerating LocalLM review for ${item.articleTitle}...`);
   try {
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -502,7 +502,7 @@ async function createReview(item) {
     const data = await response.json();
     return String(data.choices?.[0]?.message?.content || fallback).replace(/\*/g, '').replace(/\n/g, '<br>').trim().slice(0, 260);
   } catch (error) {
-    console.warn(`LocalLM review skipped for ${rawName}: ${error.message}`);
+    console.warn(`LocalLM review skipped for ${item.articleTitle}: ${error.message}`);
     return fallback;
   }
 }
@@ -1072,8 +1072,16 @@ async function main() {
 
   console.log('\n');
 
+  // 全体の件数をあらかじめ取得
+  const totalProducts = products.length;
   const newProducts = [];
-  for (const item of products) {
+for (let i = 0; i < products.length; i++) {
+    const item = products[i];
+    const currentIndex = i + 1; // 1言目のインデックス（1-based）
+
+    // ログ出力: 現在の進捗を表示
+    console.log(`[進捗] ${currentIndex} / ${totalProducts} 件目を生成中... (${item.name || item.rawName || '名称未設定'})`);
+
     const article = await createArticle(item);
     item.articleTitle = article.title;
 
@@ -1083,7 +1091,7 @@ async function main() {
     const candidateTitle = item.articleTitle;
     const titleKey = canonicalTitle(candidateTitle);
     if (existingTitles.has(titleKey) || newTitles.has(titleKey)) {
-      console.log(`Skipping duplicate article title (pre-check): ${item.rawName} -> ${candidateTitle}`);
+      console.log(`Skipping duplicate article title (pre-check): ${item.articleTitle} -> ${candidateTitle}`);
       continue;
     }
     item.abv = await createAbv(item) || item.abv || '';
@@ -1108,8 +1116,7 @@ async function main() {
     const finalTitle = item.articleTitle;
     const finalTitleKey = canonicalTitle(finalTitle);
     if (existingTitles.has(finalTitleKey) || newTitles.has(finalTitleKey)) {
-      console.log(`Skipping duplicate article title (post-AI): ${item.rawName} -> ${finalTitle}`);
-      continue;
+      console.log(`[Skipped ${currentIndex}/${totalProducts}] Duplicate article title (post-AI): ${item.articleTitle} -> ${finalTitle}`);continue;
     }
     
     item.articleBody = article.body;
@@ -1118,6 +1125,8 @@ async function main() {
     item.amazon = amazonSearchUrl(item.articleTitle || item.name);
     newProducts.push(item);
     newTitles.add(finalTitleKey);
+
+    console.log(`[完了] ${currentIndex} / ${totalProducts} 件目の生成が成功しました！`);
   }
 
   const mergedProducts = [...existing, ...newProducts];
