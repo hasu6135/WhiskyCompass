@@ -379,7 +379,7 @@ async function createArticle(item) {
   const rawName = item.rawName || item.name;
   const fallbackBody = item.note || `${rawName} はおすすめのウイスキーです。詳細は販売ページでご確認ください。`;
   try {
-    const prompt = `商品情報:\n名前: ${rawName}\n価格: ${item.price || ''}\n説明: ${item.caption || ''}\nタグ: ${(item.flavor||[]).join('、')}\n\n出力形式: JSON で {"title":"...","body":"..."} のみを返してください。タイトルは「ブランド名 製法分類 熟成年数 容量」の形式を優先して短く、本文は120〜300文字の日本語で説明を書くこと。`;
+    const prompt = `商品情報:\n名前: ${rawName}\n価格: ${item.price || ''}\n説明: ${item.caption || ''}\nタグ: ${(item.flavor||[]).join('、')}\n\n出力形式: JSON で {"title":"...","body":"..."} のみを返してください。タイトルは「ブランド名 製法分類」の形式を優先して短く、本文は120〜300文字の日本語で説明を書くこと。`;
     const res = await fetch(LM_STUDIO_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: 'system', content: 'あなたは日本語の編集者です。出力は必ずJSONのみで返してください。' }, { role: 'user', content: prompt }], temperature: 0.4 }) });
     if (!res.ok) throw new Error(`LocalLM ${res.status}`);
     const data = await res.json();
@@ -774,8 +774,6 @@ function generateHtmlForProduct(item) {
 </head>
 <body>
   <main class="product">
-    <a class="back-link" href="/">← 戻る</a>
-    
     <div id="productContent">
       <div class="product-hero">
         <div class="product-image">
