@@ -147,10 +147,12 @@ async function extractOrigin(item) {
 原産国は～～産とすること。
 原産国が判別できない場合は「原産国不明」、ブランドが判別できない場合は「ブランド不明」としてください。
 出力は必ずJSONのみで {"origin":"...","brand":"..."} 形式で返してください。`; 
+
     const response = await fetch(LM_STUDIO_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), // 💡 モデル指定も共通化
         messages: [
           { role: 'system', content: 'あなたは日本語の編集者です。出力は必ずJSONのみで返してください。' },
           { role: 'user', content: prompt }
@@ -158,16 +160,20 @@ async function extractOrigin(item) {
         temperature: 0.2
       })
     });
+
     if (!response.ok) throw new Error(`LocalLM ${response.status}`);
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
-    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
-    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    
+    // 💡 修正箇所： safeJsonParse で崩れたJSON表記や前後の余計な文字列を強力に処理
+    const parsed = safeJsonParse(content);
+
     if (parsed) {
       const originRaw = typeof parsed.origin === 'string' ? parsed.origin.trim() : '';
       const brandRaw = typeof parsed.brand === 'string' ? parsed.brand.trim() : '';
       const originValue = normalizeOriginValue(originRaw || '');
       const brandValue = brandRaw || '';
+      
       if (originValue || brandValue) {
         const originText = originValue || '原産国不明';
         const brandText = brandValue || 'ブランド不明';
@@ -378,38 +384,94 @@ async function createArticle(item) {
   const fallbackTitle = formatArticleTitle(item);
   const rawName = item.rawName || item.name;
   const fallbackBody = item.note || `${rawName} はおすすめのウイスキーです。詳細は販売ページでご確認ください。`;
+  
   try {
-    const prompt = `商品情報:\n名前: ${rawName}\n価格: ${item.price || ''}\n説明: ${item.caption || ''}\nタグ: ${(item.flavor||[]).join('、')}\n\n出力形式: JSON で {"title":"...","body":"..."} のみを返してください。タイトルは「ブランド名 製法分類」の形式を優先して短く、本文は120〜300文字の日本語で説明を書くこと。`;
-    const res = await fetch(LM_STUDIO_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: 'system', content: 'あなたは日本語の編集者です。出力は必ずJSONのみで返してください。' }, { role: 'user', content: prompt }], temperature: 0.4 }) });
+    const prompt = `商品情報:
+名前: ${rawName}
+価格: ${item.price || ''}
+説明: ${item.caption || ''}
+タグ: ${(item.flavor || []).join('、')}
+
+出力形式: JSON で {"title":"...","body":"..."} のみを返してください。
+・タイトルは「ブランド名 製法分類」の形式を優先して短く記述してください。
+・本文は120〜300文字の日本語で説明を書いてください。`;
+
+    const res = await fetch(LM_STUDIO_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), // 💡 モデル指定を追加
+        messages: [
+          { role: 'system', content: 'あなたは日本語の編集者です。出力は必ずJSONのみで返してください。' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.3 // 💡 JSON崩れ防止のためわずかに調整
+      })
+    });
+
     if (!res.ok) throw new Error(`LocalLM ${res.status}`);
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content || '';
-    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
-    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+
+    // 💡 safeJsonParse で崩れた表記や前後の解説文を回避
+    const parsed = safeJsonParse(content);
+
     return {
-      title: (parsed && parsed.title) ? parsed.title : fallbackTitle,
-      body: (parsed && parsed.body) ? parsed.body : fallbackBody
+      title: (parsed && typeof parsed.title === 'string' && parsed.title.trim()) 
+        ? parsed.title.trim() 
+        : fallbackTitle,
+      body: (parsed && typeof parsed.body === 'string' && parsed.body.trim()) 
+        ? parsed.body.trim() 
+        : fallbackBody
     };
   } catch (err) {
-    console.warn('createArticle failed:', err.message);
+    console.warn(`createArticle failed for ${rawName}:`, err.message);
     return { title: fallbackTitle, body: fallbackBody };
   }
 }
 
 async function createNameSummary(item) {
   const rawName = item.rawName || item.name;
-  const fallback = rawName;
+  // 💡 フォールバックは既存のキャッチコピー等があれば優先、なければ商品名
+  const fallback = item.nameSummary || rawName;
+
   try {
-    const prompt = `ウイスキー情報：${item.articleTitle}\n\n出力形式: JSON で {"name":"..."} のみを返してください。このウイスキーを一言で表現する文言を、20〜40文字の日本語で作成してください。`;
-    const res = await fetch(LM_STUDIO_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: 'system', content: 'あなたは日本語のコピーライターです。出力は必ずJSONのみで返してください。' }, { role: 'user', content: prompt }], temperature: 0.4 }) });
+    const prompt = `ウイスキー情報:
+商品名: ${item.articleTitle || rawName}
+説明: ${item.caption || 'なし'}
+
+【指示】このウイスキーの魅力を伝える一言キャッチコピーを、20〜40文字の日本語で作成してください。
+※商品名をそのまま返すのではなく、味や特徴を伝える短い文にしてください。
+出力形式: JSON で {"summary":"..."} のみを返してください。`;
+
+    const res = await fetch(LM_STUDIO_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), // 💡 モデル指定の共通化
+        messages: [
+          { role: 'system', content: 'あなたは優秀なウイスキー専門のコピーライターです。出力は必ずJSONのみで返してください。' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.5 // 💡 キャッチコピーの表現力を出すため少し高めに設定
+      })
+    });
+
     if (!res.ok) throw new Error(`LocalLM ${res.status}`);
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content || '';
-    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
-    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-    return (parsed && parsed.name) ? parsed.name : fallback;
+
+    // 💡 safeJsonParse でパースエラーを防止
+    const parsed = safeJsonParse(content);
+
+    // LLMが "summary" や "name" など表記揺れで返してきても拾えるようにケア
+    const summary = parsed?.summary || parsed?.name || parsed?.copy || '';
+
+    return (summary && typeof summary === 'string' && summary.trim()) 
+      ? summary.trim() 
+      : fallback;
   } catch (err) {
-    console.warn('createNameSummary failed:', err.message);
+    console.warn(`createNameSummary failed for ${rawName}:`, err.message);
     return fallback;
   }
 }
@@ -442,25 +504,35 @@ async function createAbv(item) {
   const rawName = item.rawName || item.name;
   const fallback = item.abv || '';
   try {
-    const prompt = `ウイスキー情報：${item.articleTitle}\n\nこの商品に含まれるアルコール度数を、必ず日本語で「43％」の形式で1つだけ答えてください。出力は必ずJSON形式で {"abv":"..."} のみを返してください。`;
+    // 💡 商品説明 (caption) もプロンプトに含めて精度向上
+    const prompt = `商品名：${item.articleTitle}\n商品説明：${item.caption || 'なし'}\n\nこの商品に含まれるアルコール度数を、必ず「43％」のように数値+％の形式で1つだけ答えてください。不明な場合は空文字を返してください。出力は必ずJSON形式で {"abv":"..."} のみを返してください。`;
+    
     const response = await fetch(LM_STUDIO_API_URL, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), temperature: 0.25,
+        ...(AI_MODEL_NAME ? { model: AI_MODEL_NAME } : {}), 
+        temperature: 0.1, // 💡 度数の抽出はランダム性を下げるため 0.1 に変更
         messages: [
           { role: 'system', content: 'あなたは日本語のウイスキー編集者です。出力は必ずJSONのみで返してください。' },
           { role: 'user', content: prompt }
         ]
       })
     });
+
     if (!response.ok) throw new Error(`LocalLM ${response.status}`);
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
     const parsed = safeJsonParse(content);
     const abv = parsed?.abv || parsed?.ABV || parsed?.度数 || '';
+
     if (abv && typeof abv === 'string') {
-      const normalized = abv.trim().replace(/[^0-9\.％%]/g, '').replace(/%$/, '％');
-      if (normalized) return normalized;
+      // 💡 数字とドット（小数点）だけを抽出
+      const numericMatch = abv.match(/\d+(?:\.\d+)?/);
+      if (numericMatch) {
+        // 必ず「数値＋全角％」の形に整えて返す（例: 43.0％, 40％）
+        return `${numericMatch[0]}％`;
+      }
     }
     return fallback;
   } catch (error) {
@@ -672,15 +744,25 @@ async function translateTitleToEnglish(title) {
   try {
     const prompt = `次の日本語のウイスキー記事タイトルを、SEOに使える短い英語タイトルに翻訳してください。出力は必ずJSONのみで {"english":"..."} の形式にしてください。\n\n日本語タイトル: ${title}`;
     const res = await fetch(LM_STUDIO_API_URL, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'system', content: 'あなたは日本語から英語への翻訳者です。出力は必ずJSONのみで返してください。' }, { role: 'user', content: prompt }], temperature: 0.2 })
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        messages: [
+          { role: 'system', content: 'あなたは日本語から英語への翻訳者です。出力は必ずJSONのみで返してください。' }, 
+          { role: 'user', content: prompt }
+        ], 
+        temperature: 0.2 
+      })
     });
     if (!res.ok) throw new Error(`LocalLM ${res.status}`);
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content || '';
-    const jsonMatch = content.trim().match(/\{[\s\S]*\}/);
-    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-    return (parsed && typeof parsed.english === 'string' && parsed.english.trim()) ? parsed.english.trim() : '';
+    
+    // 💡 修正箇所： safeJsonParse を使って堅牢にパース
+    const parsed = safeJsonParse(content);
+    return (parsed && typeof parsed.english === 'string' && parsed.english.trim()) 
+      ? parsed.english.trim() 
+      : '';
   } catch (err) {
     console.warn('translateTitleToEnglish failed:', err.message);
     return '';
