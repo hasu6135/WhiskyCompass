@@ -11,7 +11,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const HITS = 3;
+const HITS = 30;
 const LM_STUDIO_API_URL = 'http://localhost:1234/v1/chat/completions';
 const OUTPUT_FILE = path.resolve('public/data/whiskies.js');
 const PRODUCTS_DIR = path.resolve('public/products'); // HTML出力先
@@ -438,14 +438,25 @@ async function createArticle(item) {
 }
 
 async function createNameSummary(item) {
-  const rawName = item.rawName || item.name;
+  const rawName = item.rawName || item.name || '';
   // 💡 フォールバックは既存のキャッチコピー等があれば優先、なければ商品名
   const fallback = item.nameSummary || rawName;
 
   try {
+    // 💡 改行コードや制御文字、連続する空白を整理してプロンプトの破損を防ぐ
+    const cleanRawName = String(item.articleTitle || rawName)
+      .replace(/[\r\n\t]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const cleanCaption = String(item.caption || 'なし')
+      .replace(/[\r\n\t]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
     const prompt = `ウイスキー情報:
-商品名: ${item.articleTitle || rawName}
-説明: ${item.caption || 'なし'}
+商品名: ${cleanRawName}
+説明: ${cleanCaption}
 
 【指示】このウイスキーの魅力を伝える一言キャッチコピーを、20〜40文字の日本語で作成してください。
 ※商品名をそのまま返すのではなく、味や特徴を伝える短い文にしてください。
@@ -464,7 +475,10 @@ async function createNameSummary(item) {
       })
     });
 
-    if (!res.ok) throw new Error(`LocalLM ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`LocalLM ${res.status}`);
+    }
+
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content || '';
 
@@ -478,7 +492,8 @@ async function createNameSummary(item) {
       ? summary.trim() 
       : fallback;
   } catch (err) {
-    console.warn(`createNameSummary failed for ${rawName}:`, err.message);
+    // エラー内容をログに出しつつ、スクリプト全体を止めずに fallback を返す
+    console.warn(`[Warning] createNameSummary failed for "${rawName}":`, err.message);
     return fallback;
   }
 }

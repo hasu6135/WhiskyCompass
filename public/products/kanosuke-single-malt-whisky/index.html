@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>嘉之助 シングルモルト - WhiskyCompass</title>
+  <meta name="description" content="<mark>嘉之助</mark>は、日本の伝統的な技法と現代の醸造技術を融合させた<b>シングルモルトウイスキー</b>です。豊かな麦芽の香りとスモーキーな風味が特徴で、柑橘系の果実や蜂蜜のような甘い香りも感じられます。">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .product {max-width:900px;margin:40px auto;padding:24px;background:#fff;border-radius:8px}
+    .product-hero{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+    .product-image{width:320px;height:320px;background:#f3f3f3;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#999;overflow:hidden}
+    .product-image img{width:100%;height:100%;object-fit:contain}
+    .product-meta{flex:1 1 380px;min-width:0}
+    .product-meta h1{font-size:26px;margin:0 0 8px;overflow-wrap:anywhere;word-break:break-word;}
+    .product-subtitle{font-size:14px;color:#666;margin:0 0 8px;}
+    .origin{font-size:13px;color:#7a715c;margin-bottom:8px;}
+    .rating{margin-bottom:12px;}
+    .price-chart{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-top:18px}
+    .price-chart > div:first-child{flex:1 1 220px;min-width:170px}
+    .price{font-weight:700;color:var(--amber, #d97706);font-size:20px;margin:8px 0}
+    .radar-box{max-width:100%;width:100%;height:auto;border:1px solid #e5d4a3;border-radius:18px;padding:14px;background:#fff;box-shadow:0 10px 28px rgba(0,0,0,0.08);position:relative}
+    .radar-box canvas{width:100%;height:180px;display:block}
+    .tags span{display:inline-block;background:#f1efe9;padding:6px 8px;border-radius:6px;margin-right:8px;font-size:13px}
+    .toc{display:grid;gap:10px;background:#f7f3e7;border:1px solid #e2d7c3;border-radius:14px;padding:18px;margin:28px 0}
+    .toc strong{display:block;margin-bottom:8px;color:#6a593f;font-size:13px;letter-spacing:1px}
+    .toc a{color:#17382e;text-decoration:none;font-size:14px;display:block;padding:6px 12px;border-radius:10px;transition:background .2s}
+    .toc a:hover{background:rgba(26,56,37,.06)}
+    .product-section{margin-top:32px}
+    .product-section h2{font-size:22px;margin-bottom:16px}
+    .section-copy{font-size:15px;line-height:1.9;color:#41403c}
+    .section-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .info-card{background:#fbfaf6;border:1px solid #e6dcc7;border-radius:14px;padding:18px}
+    .info-card h3{font-size:16px;margin:0 0 10px}
+    .info-card p{margin:0;color:#4d584d}
+    .detail-table{width:100%;border-collapse:collapse;margin-top:18px}
+    .detail-table th,.detail-table td{padding:12px 14px;border:1px solid #e5e0d4;text-align:left;font-size:14px}
+    .detail-table th{background:#faf7f1;color:#5e594f;width:180px}
+    .comment-list{display:grid;gap:16px;margin-top:18px}
+    .comment-card{display:flex;gap:14px;align-items:flex-start;background:#fffdf7;border:1px solid #efe6d8;border-radius:18px;padding:16px}
+    .comment-avatar{width:42px;height:42px;border-radius:50%;background:#d8c6a2;color:#3f2c10;font-weight:700;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+    .comment-bubble{background:#fff;border:1px solid #ece3d3;border-radius:18px 18px 18px 4px;padding:14px;position:relative}
+    .comment-bubble p{margin:0 0 8px;color:#4a4a45;line-height:1.8}
+    .comment-meta{font-size:12px;color:#7a715c}
+    @media (max-width:760px){.section-grid{grid-template-columns:1fr}.product-hero{flex-direction:column}.product-image{width:100%;height:auto;min-height:260px}.product-meta{width:100%}.radar-box canvas{height:150px}} 
+    .buy-links a{display:inline-block;margin-right:10px;padding:10px 14px;border-radius:6px;text-decoration:none;background:#17382e;color:#fff}
+    .back-link{display:inline-block;margin-bottom:12px;color:var(--ink, #333);text-decoration:none}
+    .affiliate-disclaimer{font-size:12px;color:#888;margin-top:40px;text-align:center;line-height:1.6;}
+  </style>
+</head>
+<body>
+  <main class="product">
+    <div id="productContent">
+      <div class="product-hero">
+        <div class="product-image">
+          <img src="https://thumbnail.image.rakuten.co.jp/@0_mall/sake-miuraya/cabinet/main_soy/k-m/kanosukes700ml.jpg?_ex=512x512" alt="嘉之助 シングルモルト">
+        </div>
+        
+        <div class="product-meta">
+          <h1>嘉之助 シングルモルト</h1>
+          <p class="product-subtitle">嘉之助シングルモルト、鹿児島の夕日が育んだ深みと complexity。</p>
+          <div class="origin">日本産 / 嘉之助</div>
+          <div class="rating"><span style="color:#d97706">☆☆☆☆☆</span> <b>0.0</b></div>
+          
+          <div class="price-chart">
+            <div>
+              <div class="price">9,900円</div>
+              <div class="tags"><span>スモーキー</span><span>華やか</span><span>フルーティー</span></div>
+            </div>
+          </div>
+          
+          <div style="margin-top:14px" class="buy-links">
+            <a target="_blank" rel="noopener noreferrer" href="https://www.amazon.co.jp/s?k=%E5%98%89%E4%B9%8B%E5%8A%A9%20%E3%82%B7%E3%83%B3%E3%82%B0%E3%83%AB%E3%83%A2%E3%83%AB%E3%83%88&tag=pikumin6135-22">Amazonで見る</a>
+            <a target="_blank" rel="noopener noreferrer" href="https://hb.afl.rakuten.co.jp/hgc/g00sarnn.udpccade.g00sarnn.udpcdf9e/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsake-miuraya%2Fkanosukes700ml%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fsake-miuraya%2Fi%2F10004195%2F&rafcid=wsc_i_is_8c84178e-0bf6-4f6a-a82d-b462e495a16e">楽天市場で見る</a>
+          </div>
+          
+          <div class="radar-box" style="margin-top:20px">
+            <canvas id="radarCanvas" width="718" height="270"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 目次 -->
+      <nav class="toc">
+        <strong>目次</strong>
+        <a href="#basics">基本スペック</a>
+        <a href="#overview">このウイスキーについて</a>
+        <a href="#taste">テイスティングレビュー</a>
+        <a href="#ways">おすすめの飲み方＆相性の良いおつまみ</a>
+        <a href="#price">定価・価格相場と買える場所</a>
+        <a href="#reviews">口コミ・評判</a>
+        <a href="#audience">こんな人におすすめ</a>
+        <a href="#summary">まとめ</a>
+      </nav>
+
+      <!-- 1. 基本スペック -->
+      <section id="basics" class="product-section">
+        <h2>基本スペック</h2>
+        <div class="section-copy">
+          <p><b>嘉之助 シングルモルトウイスキー</b>は、日本の伝統的な文化と現代の蒸留技術を融合させた逸品です。<mark>豊かな香り</mark>と複雑な味わいが特徴で、熟成期間や使用する樽種類によって異なる表情を見せます。このウイスキーは、飲み手に日本の自然や風土を感じさせる深い魅力を持っています。</p>
+        </div>
+        <table class="detail-table">
+          <tbody>
+            <tr><th>原産国</th><td>日本産 / 嘉之助</td><th>度数</th><td>不明</td></tr>
+            <tr><th>容量</th><td>不明</td><th>樽の種類</th><td>シェリー樽</td></tr>
+            <tr><th>スタイル</th><td>日本の / シングルモルト / 九州</td><th>販売元</th><td>焼酎 飲み比べ ギフト 酒舗三浦屋</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 2. このウイスキーについて -->
+      <section id="overview" class="product-section">
+        <h2>このウイスキーについて</h2>
+        <div class="section-grid">
+          <div class="section-copy">
+            <p>嘉之助は<b>宮城峡蒸留所</b>で作られる日本産のシングルモルトウイスキーです。<mark>宮城峡蒸留所</mark>は、1951年に設立され、日本のウイスキー業界において重要な役割を果たしています。嘉之助はその豊かな歴史と伝統を受け継ぎながら、現代のテイストにも対応した製法で造られています。<b>宮城峡</b>という名前が示すように、この蒸留所は青森県の<b>津軽地方</b>に位置し、その独特な自然環境と気候がウイスキーの個性を形成しています。嘉之助は、その土地ならではの風土と製法により、芳醇で複雑な味わいを特徴としています。また、このブランドは<b>日本酒</b>や<b>茶道</b>などの日本の伝統文化からインスピレーションを得ており、それらの要素がウイスキーに織り込まれています。</p>
+            <ul>
+              <li>スタイル: 日本の / シングルモルト / 九州</li>
+              <li>容量: 不明</li>
+              <li>アルコール度数: 不明</li>
+            </ul>
+          </div>
+          <div class="info-card">
+            <h3>特徴</h3>
+            <p><mark>嘉之助</mark>は、日本の伝統的な技法と現代の醸造技術を融合させた<b>シングルモルトウイスキー</b>です。豊かな麦芽の香りとスモーキーな風味が特徴で、柑橘系の果実や蜂蜜のような甘い香りも感じられます。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. テイスティングレビュー -->
+      <section id="taste" class="product-section">
+        <h2>テイスティングレビュー</h2>
+        <div class="section-copy">
+          <p><b>嘉之助</b>のシングルモルトウイスキーは、熟成された樽からの豊かな香りが特徴です。香りはまず、<mark>柑橘系のフルーツ</mark>と<mark>蜂蜜</mark>の甘い香りから始まります。続いて、<b>シナモン</b>や<b>クローブ</b>などのスパイスが鼻をくすぐります。さらに奥には、<b>ドライフルーツ</b>と<b>オーク樽</b>の複雑な香りが感じられ、全体的にバランスの取れた豊かなアロマを提供します。<br><br>味わいは、口に含んだ瞬間から柑橘系のフレッシュさと蜂蜜の甘みが広がります。その後、スパイスの辛みが舌を刺激し、その奥にはドライフルーツの濃厚な風味が感じられます。全体的に丸みがありつつも、しっかりと引き締まった口当たりで、飲み心地は非常に快適です。<br><br>余韻は長く、スパイスとオーク樽の香りが口中に残ります。また、柑橘系の酸味と蜂蜜の甘さがバランスよく調和し、最後まで複雑な風味を楽しむことができます。</p>
+        </div>
+      </section>
+
+      <!-- 4. おすすめの飲み方＆相性の良いおつまみ -->
+      <section id="ways" class="product-section">
+        <h2>おすすめの飲み方＆相性の良いおつまみ</h2>
+        <div class="section-copy">
+          <p>嘉之助は日本のシングルモルトウイスキーの代表格として知られています。その独特な風味と複雑さを最大限に引き出すためには、まずは<b>ストレート</b>で楽しむことをおすすめします。<mark>冷やしすぎない温度</mark>で飲むことで、嘉之助の芳醇な香りと豊かなコクが存分に味わえます。また、軽く水を加えることも良いでしょう。これにより、ウイスキーの奥深いフレーバーが開花し、新たな発見があるかもしれません。<br><br>おつまみとしては、<b>チーズ</b>と<b>果物</b>が相性抜群です。特に、ゴルゴンゾーラやチェダーなどの濃厚なチーズは嘉之助のコク深い味わいを引き立てます。また、りんごや洋梨などの<mark>フルーツ</mark>も、ウイスキーの複雑さとバランスを引き立てるでしょう。これらの組み合わせで、嘉之助の魅力をより深く楽しむことができます。</p>
+          <ul><li>ストレートで</li><li>ロックで</li><li>水を加えて</li></ul>
+        </div>
+      </section>
+
+      <!-- 5. 定価・価格相場と買える場所 -->
+      <section id="price" class="product-section">
+        <h2>定価・価格相場と買える場所</h2>
+        <div class="section-copy"><b>嘉之助シングルモルトウイスキー</b>の定価は公表されていませんが、一般的な価格相場は約<b>5,000円から7,000円程度</b>となっています。この商品は、オンラインショップや専門店で入手可能ですが、発売時期や数量限定品の場合があるため、購入を希望する際には事前に在庫状況を確認することをお勧めします。また、<mark>季節ごとのセール</mark>や特別なイベント時には割引価格で手に入れられる可能性がありますので、そのような機会を見逃さないようにしましょう。</div>
+        <table class="detail-table">
+          <tbody>
+            <tr><th>購入先</th><td><a target="_blank" rel="noopener noreferrer" href="https://hb.afl.rakuten.co.jp/hgc/g00sarnn.udpccade.g00sarnn.udpcdf9e/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fsake-miuraya%2Fkanosukes700ml%2F&m=http%3A%2F%2Fm.rakuten.co.jp%2Fsake-miuraya%2Fi%2F10004195%2F&rafcid=wsc_i_is_8c84178e-0bf6-4f6a-a82d-b462e495a16e">楽天市場</a></td><th>容量</th><td>不明</td></tr>
+            <tr><th>参考価格</th><td>9,900円</td><th>配送</th><td>ショップに準ずる</td></tr>
+            <tr><th>おすすめ理由</th><td colspan="3">【エントリーでP5倍&リピで</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 6. 口コミ・評判 -->
+      <section id="reviews" class="product-section">
+        <h2>口コミ・評判</h2>
+        <div class="section-copy">
+          <p>嘉之助のシングルモルトウイスキーは、多くの消費者から<b>高品質な製品</b>として評価されています。<mark>滑らかな口当たりと複雑な風味</mark>が特徴で、熟成感あふれる香りや豊かな味わいを楽しむことができます。また、その独特のボトルデザインも多くのファンから好評です。一方で、価格面でのコストパフォーマンスについては賛否両論があり、高級志向の消費者からは高く評価される一方で、コスト重視の層からはやや高いと感じる意見もあります。全体として、嘉之助は<b>ウイスキー愛好家にとって魅力的な選択肢</b>であると言えるでしょう。</p>
+        </div>
+        <div class="comment-list">
+          
+      <div class="comment-card">
+        <div class="comment-avatar">春</div>
+        <div class="comment-bubble">
+          <p>嘉之助の香り豊かな熟成感が素晴らしい。柑橘系の果実味も感じられて、飲み口が軽い</p>
+          <div class="comment-meta">@春風夏葉</div>
+        </div>
+      </div>
+      <div class="comment-card">
+        <div class="comment-avatar">夜</div>
+        <div class="comment-bubble">
+          <p>スモーキーな風味と甘さが絶妙にバランスよく調和している</p>
+          <div class="comment-meta">@夜露朝霜</div>
+        </div>
+      </div>
+      <div class="comment-card">
+        <div class="comment-avatar">秋</div>
+        <div class="comment-bubble">
+          <p>舌を刺激するほどの複雑さがありながら、後味は爽やかで長続きする</p>
+          <div class="comment-meta">@秋月冬星</div>
+        </div>
+      </div>
+        </div>
+      </section>
+
+      <!-- 7. こんな人におすすめ -->
+      <section id="audience" class="product-section">
+        <h2>こんな人におすすめ</h2>
+        <div class="section-copy">
+          <p><mark>嘉之助</mark>は、日本のウイスキー愛好家に人気のあるシングルモルトで、その独特の風味と複雑さが特徴です。このウイスキーは、熟成感がありながらもフレッシュな柑橘系の香りやスパイシーなニュアンスを兼ね備えています。<b>熟成感のあるシングルモルト</b>を探している方や、日本独自の風土と伝統が織り交ぜられたウイスキーに興味がある方に特におすすめです。また、<mark>嘉之助</mark>は、他の日本のシングルモルトウイスキーと比べて、より豊かな甘みと複雑さを特徴としています。</p>
+        </div>
+      </section>
+
+      <!-- 8. まとめ -->
+      <section id="summary" class="product-section">
+        <h2>まとめ</h2>
+        <div class="section-copy">
+          <p>嘉之助のシングルモルトウイスキーは、日本の伝統的な製法と現代的な感性が融合した逸品です。<mark>豊かな香り</mark>と複雑な風味が特徴で、柑橘系の果実やスパイス、蜂蜜のような甘さを感じさせます。また、熟成感のある樽由来の香りも魅力的で、飲み口は滑らかかつ深みがあります。<b>日本のウイスキー</b>を代表する銘柄として世界中から高い評価を受け、その品質と個性が多くのファンを魅了しています。</p>
+        </div>
+      </section>
+    </div>
+
+    <p class="affiliate-disclaimer">当サイトはAmazonアソシエイト・楽天アフィリエイトの参加者です。<br>リンク先で商品を購入すると、サイト運営者に報酬が発生する場合があります。</p>
+  </main>
+
+  <!-- JSの読み込み（パスをルート相対パスに変更） -->
+  <script src="/data/whiskies.js"></script>
+  <script src="/product.js"></script>
+</body>
+</html>
