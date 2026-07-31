@@ -11,7 +11,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const HITS = 1;
+const HITS = 30;
 const LM_STUDIO_API_URL = 'http://localhost:1234/v1/chat/completions';
 const OUTPUT_FILE = path.resolve('public/data/whiskies.js');
 const PRODUCTS_DIR = path.resolve('public/products'); // HTML出力先
@@ -230,6 +230,10 @@ async function rakutenSearch(sort) {
     formatVersion: '2',
     elements: 'itemName,itemPrice,itemCaption,itemUrl,affiliateUrl,mediumImageUrls,reviewCount,reviewAverage,shopName,genreId,availability'
   });
+
+  // 💡 呼び出し間の連続アクセス防止（1.2秒待機）
+  await new Promise(resolve => setTimeout(resolve, 1200));
+
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const response = await fetch(`${RAKUTEN_ENDPOINT}?${params}`, {
       headers: {
@@ -237,6 +241,7 @@ async function rakutenSearch(sort) {
         Origin: RAKUTEN_ORIGIN
       }
     });
+
     if (response.ok) {
       const data = await response.json();
       const items = Array.isArray(data.items)
@@ -247,9 +252,11 @@ async function rakutenSearch(sort) {
       console.log(`Rakuten search (${sort}): ${items.length} items`);
       return items;
     }
+
     const text = await response.text();
     if (response.status === 429) {
-      const retryAfter = Number(response.headers.get('retry-after')) || 1;
+      // 💡 デフォルトの待機時間を 1秒 から 2秒 に引き上げ
+      const retryAfter = Number(response.headers.get('retry-after')) || 2;
       console.warn(`Rakuten rate limited, retrying in ${retryAfter}s (${attempt + 1}/3)`);
       await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
       continue;
